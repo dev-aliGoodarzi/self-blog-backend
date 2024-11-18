@@ -1,0 +1,122 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Self-Blog",
+    "version": "1.0.0"
+  },
+  "schemes": ["http", "https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "// COMMENT_AUTH_START": {},
+    "/admin/v1/auth-login": {
+      "post": {
+        "summary": "POST Admin Data (Email & Password) for Login",
+        "operationId": "Login-Admin",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "loginData",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/loginPostData"
+            }
+          },
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "language": "fa | en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User authenticated successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string",
+                  "example": "22"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "/admin/v1/auth-register": {
+      "post": {
+        "summary": "POST Admin Data (Email & Password) for Register",
+        "operationId": "Register-Admin",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "loginData",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/loginPostData"
+            }
+          },
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "language": "fa | en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "string",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string",
+                  "example": "successful"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Auth"]
+      }
+    },
+    "COMMENT_AUTH_END": {}
+  },
+  "definitions": {
+    "loginPostData": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "me74242@gmail.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "Ali1379@"
+        }
+      },
+      "required": ["email", "password"]
+    },
+    "registerPostData": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "me74242@gmail.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "Ali1379@"
+        }
+      },
+      "required": ["email", "password"]
+    }
+  }
+}
