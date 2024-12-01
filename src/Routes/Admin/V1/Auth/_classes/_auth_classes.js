@@ -93,9 +93,11 @@ class _auth_classes {
     static canResubmitUserAuthData(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const language = req.headers.language;
+            const { userEmail } = req;
             const currentUser = yield UserModel_1.AdminUserModel.findOne({
-                email: req.body.email,
+                email: userEmail,
             });
+            console.log("userNotExistx");
             if (!currentUser)
                 return "userNotExist";
             if (currentUser.isRegisterCompleted) {

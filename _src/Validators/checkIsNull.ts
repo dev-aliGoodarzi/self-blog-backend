@@ -1,19 +1,18 @@
+export type T_ErrorData = {
+  errorKey: string;
+  errorMessage: string;
+};
+
 export type T_ErrorDataType<T> = {
-  data: T;
+  data?: T;
   expectedType: "string" | "number";
-  errorData: {
-    errorKey: string;
-    errorMessage: string;
-  };
+  errorData: T_ErrorData;
 };
 
 export const checkIsNull = <T>(
   data: T,
   expectedType: "string" | "number",
-  errorData: {
-    errorKey: string;
-    errorMessage: string;
-  },
+  errorData: T_ErrorData,
   onErrorFunction?: (_data: T_ErrorDataType<T>, errorKey: string) => void
 ):
   | {

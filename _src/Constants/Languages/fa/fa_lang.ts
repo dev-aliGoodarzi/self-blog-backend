@@ -16,4 +16,7 @@ export const fa_lang: Record<T_LanguageKeys, string> = {
   operationSuccess: "عملیات موفق",
   alreadyDone: "قبلا عملیات مورد نظر انجام شده",
   noToken: "توکن وارد نشده",
+  notExistedUser: "کاربر مورد نظر ، موجود نیست",
+  unKnownError: "خطای نامشخص",
+  userAuthCompleted: "احراز هویت کامل شد",
 };

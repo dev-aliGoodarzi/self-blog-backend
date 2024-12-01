@@ -24,6 +24,9 @@ const Languages_1 = require("../../../../Constants/Languages");
 // Services
 const _auth_services_1 = require("./_classes/_auth_services");
 const authMiddleware_1 = require("./Middlewares/authMiddleware");
+const UserModel_1 = require("../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
+const checkIsNull_1 = require("../../../../Validators/checkIsNull");
+const DoneStatusCode_1 = require("../../../../Constants/Done/DoneStatusCode");
 // Services
 exports.AdminAuth = (0, express_1.Router)();
 exports.AdminAuth.post("/auth-register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -83,20 +86,11 @@ exports.AdminAuth.post("/auth-resubmit-user-auth", authMiddleware_1.authMiddlewa
     const language = req.headers.language;
     const { body } = req;
     const keys = Object.keys(body);
-    const canResubmitUserAuthData = yield _auth_classes_1._auth_classes.canResubmitUserAuthData(req);
-    if (typeof canResubmitUserAuthData === "string") {
-        if (canResubmitUserAuthData === "userNotExist") {
-            (0, ErrorSenderToClient_1.ErrorSenderToClient)({
-                data: {},
-                errorData: {
-                    errorKey: "",
-                    errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "userNotExist"),
-                },
-                expectedType: "string",
-            }, ErrorsStatusCode_1.ErrorsStatusCode.notExist.standardStatusCode, res);
-            return;
-        }
-        if (canResubmitUserAuthData === "alreadyCompleted") {
+    try {
+        const desierdUser = yield UserModel_1.AdminUserModel.findOne({
+            email: req.userEmail,
+        });
+        if (desierdUser.isRegisterCompleted) {
             (0, ErrorSenderToClient_1.ErrorSenderToClient)({
                 data: {},
                 errorData: {
@@ -107,8 +101,47 @@ exports.AdminAuth.post("/auth-resubmit-user-auth", authMiddleware_1.authMiddlewa
             }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
             return;
         }
-        if (canResubmitUserAuthData === "doneForContinue") {
-            return;
+        else {
+            const errors = {};
+            const desiredKeys = ["name", "lastName"];
+            desiredKeys.forEach((item) => {
+                const body = req.body;
+                (0, checkIsNull_1.checkIsNull)(body[item], "string", {
+                    errorKey: item,
+                    errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                }, (_errData, errKey) => {
+                    errors[errKey] = _errData;
+                });
+            });
+            if (Object.keys(errors).length > 0) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: errors,
+                    errorData: {
+                        errorKey: "",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                    },
+                    expectedType: "string",
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
+            desierdUser.name = body["name"];
+            desierdUser.lastName = body["lastName"];
+            desierdUser.isRegisterCompleted = true;
+            yield desierdUser.save();
+            res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                message: (0, Languages_1.getWordBasedOnCurrLang)(language, "userAuthCompleted"),
+            });
         }
+    }
+    catch (err) {
+        (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+            data: err,
+            errorData: {
+                errorKey: "",
+                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "unKnownError"),
+            },
+            expectedType: "string",
+        }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+        console.log(err);
     }
 }));

@@ -17,4 +17,7 @@ export type T_LanguageKeys =
   | "notEqualPassword"
   | "operationSuccess"
   | "alreadyDone"
-  | "noToken";
+  | "noToken"
+  | "notExistedUser"
+  | "unKnownError"
+  | "userAuthCompleted";

@@ -134,9 +134,12 @@ export class _auth_classes {
   > {
     const language = req.headers.language as T_ValidLanguages;
 
+    const { userEmail } = req;
     const currentUser = await AdminUserModel.findOne({
-      email: req.body.email,
+      email: userEmail,
     })!;
+
+    console.log("userNotExistx");
     if (!currentUser) return "userNotExist";
 
     if (currentUser.isRegisterCompleted) {

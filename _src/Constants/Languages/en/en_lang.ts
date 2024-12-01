@@ -15,4 +15,7 @@ export const en_lang: Record<T_LanguageKeys, string> = {
   operationSuccess: "operationSuccess",
   alreadyDone: "alreadyDone",
   noToken: "noToken",
+  notExistedUser: "notExistedUser",
+  unKnownError: "unKnownError",
+  userAuthCompleted: "userAuthCompleted",
 };

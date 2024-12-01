@@ -13,9 +13,10 @@ exports.authMiddleware = void 0;
 const ErrorSenderToClient_1 = require("../../../../../Constants/Errors/ErrorSenderToClient");
 const Languages_1 = require("../../../../../Constants/Languages");
 const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatusCode");
+const UserModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
 const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const language = req.headers.language;
-    const userToken = req.headers["Auth-Token"];
+    const userToken = req.headers["auth-token"];
     if (!userToken) {
         (0, ErrorSenderToClient_1.ErrorSenderToClient)({
             data: {},
@@ -27,5 +28,20 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         }, ErrorsStatusCode_1.ErrorsStatusCode.notAuthorized.standardStatusCode, res);
         return;
     }
+    const selectedUser = yield UserModel_1.AdminUserModel.findOne({ userToken });
+    if (!selectedUser) {
+        (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+            data: {},
+            expectedType: "string",
+            errorData: {
+                errorKey: "NOT_FOUND_USER",
+                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "notExistedUser"),
+            },
+        }, ErrorsStatusCode_1.ErrorsStatusCode.notAuthorized.standardStatusCode, res);
+        return;
+    }
+    req.userId = selectedUser.id;
+    req.userEmail = selectedUser.email;
+    next();
 });
 exports.authMiddleware = authMiddleware;

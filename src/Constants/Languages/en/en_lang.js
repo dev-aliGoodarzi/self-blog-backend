@@ -15,4 +15,7 @@ exports.en_lang = {
     operationSuccess: "operationSuccess",
     alreadyDone: "alreadyDone",
     noToken: "noToken",
+    notExistedUser: "notExistedUser",
+    unKnownError: "unKnownError",
+    userAuthCompleted: "userAuthCompleted",
 };

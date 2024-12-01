@@ -1,17 +1,15 @@
-declare global {
-  declare namespace Express {
-    interface Request {
-      headers: {
-        language?: T_ValidLanguages;
-      };
-    }
-  }
-}
+import { T_ValidLanguages } from "./Constants/Languages/languageTypes";
 
 declare global {
   namespace Express {
     interface Request {
-      language: T_Language;
+      userId?: string;
+      userEmail?: string;
+      language?: T_Language; // Assuming this is a defined type
+      headers: {
+        language?: T_ValidLanguages; // Assuming this is a defined type
+        "auth-token"?: string;
+      };
     }
   }
 }

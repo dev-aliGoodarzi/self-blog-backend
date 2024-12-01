@@ -16,6 +16,9 @@ import { T_ValidLanguages } from "../../../../Constants/Languages/languageTypes"
 // Services
 import { _auth_services } from "./_classes/_auth_services";
 import { authMiddleware } from "./Middlewares/authMiddleware";
+import { AdminUserModel } from "../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
+import { checkIsNull, T_ErrorData } from "../../../../Validators/checkIsNull";
+import { DoneStatusCode } from "../../../../Constants/Done/DoneStatusCode";
 // Services
 
 export const AdminAuth = Router();
@@ -106,30 +109,12 @@ AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
 
   const keys = Object.keys(body);
 
-  const canResubmitUserAuthData = await _auth_classes.canResubmitUserAuthData(
-    req
-  );
+  try {
+    const desierdUser = await AdminUserModel.findOne({
+      email: req.userEmail,
+    });
 
-  if (typeof canResubmitUserAuthData === "string") {
-    if (canResubmitUserAuthData === "userNotExist") {
-      ErrorSenderToClient(
-        {
-          data: {},
-          errorData: {
-            errorKey: "",
-            errorMessage: getWordBasedOnCurrLang(
-              language as T_ValidLanguages,
-              "userNotExist"
-            ),
-          },
-          expectedType: "string",
-        },
-        ErrorsStatusCode.notExist.standardStatusCode,
-        res
-      );
-      return;
-    }
-    if (canResubmitUserAuthData === "alreadyCompleted") {
+    if (desierdUser!.isRegisterCompleted) {
       ErrorSenderToClient(
         {
           data: {},
@@ -146,9 +131,69 @@ AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
         res
       );
       return;
+    } else {
+      const errors: { [key: string]: T_ErrorData } = {};
+
+      const desiredKeys = ["name", "lastName"];
+
+      desiredKeys.forEach((item) => {
+        const body = req.body;
+
+        checkIsNull(
+          body[item],
+          "string",
+          {
+            errorKey: item,
+            errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+          },
+          (_errData, errKey) => {
+            (errors as any)[errKey] = _errData;
+          }
+        );
+      });
+
+      if (Object.keys(errors).length > 0) {
+        ErrorSenderToClient(
+          {
+            data: errors,
+            errorData: {
+              errorKey: "",
+              errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      desierdUser!.name = body["name"];
+      desierdUser!.lastName = body["lastName"];
+      desierdUser!.isRegisterCompleted = true;
+
+      await desierdUser!.save();
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "userAuthCompleted"),
+      });
     }
-    if (canResubmitUserAuthData === "doneForContinue") {
-      return;
-    }
+  } catch (err) {
+    ErrorSenderToClient(
+      {
+        data: err,
+        errorData: {
+          errorKey: "",
+          errorMessage: getWordBasedOnCurrLang(
+            language as T_ValidLanguages,
+            "unKnownError"
+          ),
+        },
+        expectedType: "string",
+      },
+      ErrorsStatusCode.notAcceptable.standardStatusCode,
+      res
+    );
+    console.log(err);
   }
 });

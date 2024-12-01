@@ -3,6 +3,7 @@ import { ErrorSenderToClient } from "../../../../../Constants/Errors/ErrorSender
 import { getWordBasedOnCurrLang } from "../../../../../Constants/Languages";
 import { T_ValidLanguages } from "../../../../../Constants/Languages/languageTypes";
 import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
+import { AdminUserModel } from "../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
 
 export const authMiddleware = async (
   req: Request,
@@ -10,7 +11,7 @@ export const authMiddleware = async (
   next: () => void
 ) => {
   const language = req.headers.language as T_ValidLanguages;
-  const userToken = req.headers["Auth-Token"];
+  const userToken = req.headers["auth-token"];
 
   if (!userToken) {
     ErrorSenderToClient(
@@ -30,4 +31,28 @@ export const authMiddleware = async (
     );
     return;
   }
+
+  const selectedUser = await AdminUserModel.findOne({ userToken });
+  if (!selectedUser) {
+    ErrorSenderToClient(
+      {
+        data: {},
+        expectedType: "string",
+        errorData: {
+          errorKey: "NOT_FOUND_USER",
+          errorMessage: getWordBasedOnCurrLang(
+            language as T_ValidLanguages,
+            "notExistedUser"
+          ),
+        },
+      },
+      ErrorsStatusCode.notAuthorized.standardStatusCode,
+      res
+    );
+    return;
+  }
+
+  req.userId = selectedUser.id;
+  req.userEmail = selectedUser.email;
+  next();
 };
