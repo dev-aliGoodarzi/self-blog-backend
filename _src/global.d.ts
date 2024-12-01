@@ -7,7 +7,7 @@ declare global {
       userEmail?: string;
       language?: T_Language; // Assuming this is a defined type
       headers: {
-        language?: T_ValidLanguages; // Assuming this is a defined type
+        language: T_ValidLanguages; // Assuming this is a defined type
         "auth-token"?: string;
       };
     }

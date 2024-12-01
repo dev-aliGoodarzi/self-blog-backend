@@ -19,4 +19,5 @@ export const fa_lang: Record<T_LanguageKeys, string> = {
   notExistedUser: "کاربر مورد نظر ، موجود نیست",
   unKnownError: "خطای نامشخص",
   userAuthCompleted: "احراز هویت کامل شد",
+  thisEmailAlreadyExists: "این ایمیل قبلا برای کاربر دیگری ثبت شده",
 };

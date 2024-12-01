@@ -45,7 +45,7 @@ class _auth_services {
                 const hashPW = yield bcrypt_1.default.hash(password, Number(process.env.SALT_ROUNDS));
                 const allAdminUsersCount = yield UserModel_1.AdminUserModel.find({});
                 const newUserData = {
-                    email,
+                    email: email.toLowerCase(),
                     isRegisterCompleted: false,
                     lastName: "",
                     name: "",
@@ -54,6 +54,7 @@ class _auth_services {
                     userId: `ADMIN_${Date.now()}_${allAdminUsersCount.length}`,
                     refreshToken: "",
                     userToken: "",
+                    blogs: [],
                 };
                 const newUser = new UserModel_1.AdminUserModel(newUserData);
                 yield newUser.save();

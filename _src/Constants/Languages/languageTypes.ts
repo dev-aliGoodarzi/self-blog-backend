@@ -20,4 +20,5 @@ export type T_LanguageKeys =
   | "noToken"
   | "notExistedUser"
   | "unKnownError"
-  | "userAuthCompleted";
+  | "userAuthCompleted"
+  | "thisEmailAlreadyExists";

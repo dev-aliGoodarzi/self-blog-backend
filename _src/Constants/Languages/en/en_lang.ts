@@ -18,4 +18,5 @@ export const en_lang: Record<T_LanguageKeys, string> = {
   notExistedUser: "notExistedUser",
   unKnownError: "unKnownError",
   userAuthCompleted: "userAuthCompleted",
+  thisEmailAlreadyExists: "thisEmailAlreadyExists",
 };

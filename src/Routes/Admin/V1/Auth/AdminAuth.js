@@ -27,6 +27,7 @@ const authMiddleware_1 = require("./Middlewares/authMiddleware");
 const UserModel_1 = require("../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
 const checkIsNull_1 = require("../../../../Validators/checkIsNull");
 const DoneStatusCode_1 = require("../../../../Constants/Done/DoneStatusCode");
+const UnKnownErrorSenderToClient_1 = require("../../../../Constants/Errors/UnKnownErrorSenderToClient");
 // Services
 exports.AdminAuth = (0, express_1.Router)();
 exports.AdminAuth.post("/auth-register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -87,10 +88,10 @@ exports.AdminAuth.post("/auth-resubmit-user-auth", authMiddleware_1.authMiddlewa
     const { body } = req;
     const keys = Object.keys(body);
     try {
-        const desierdUser = yield UserModel_1.AdminUserModel.findOne({
+        const desiredUser = yield UserModel_1.AdminUserModel.findOne({
             email: req.userEmail,
         });
-        if (desierdUser.isRegisterCompleted) {
+        if (desiredUser.isRegisterCompleted) {
             (0, ErrorSenderToClient_1.ErrorSenderToClient)({
                 data: {},
                 errorData: {
@@ -124,24 +125,16 @@ exports.AdminAuth.post("/auth-resubmit-user-auth", authMiddleware_1.authMiddlewa
                 }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
                 return;
             }
-            desierdUser.name = body["name"];
-            desierdUser.lastName = body["lastName"];
-            desierdUser.isRegisterCompleted = true;
-            yield desierdUser.save();
+            desiredUser.name = body["name"];
+            desiredUser.lastName = body["lastName"];
+            desiredUser.isRegisterCompleted = true;
+            yield desiredUser.save();
             res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                 message: (0, Languages_1.getWordBasedOnCurrLang)(language, "userAuthCompleted"),
             });
         }
     }
     catch (err) {
-        (0, ErrorSenderToClient_1.ErrorSenderToClient)({
-            data: err,
-            errorData: {
-                errorKey: "",
-                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "unKnownError"),
-            },
-            expectedType: "string",
-        }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
-        console.log(err);
+        (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
     }
 }));

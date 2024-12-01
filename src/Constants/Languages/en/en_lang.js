@@ -18,4 +18,5 @@ exports.en_lang = {
     notExistedUser: "notExistedUser",
     unKnownError: "unKnownError",
     userAuthCompleted: "userAuthCompleted",
+    thisEmailAlreadyExists: "thisEmailAlreadyExists",
 };

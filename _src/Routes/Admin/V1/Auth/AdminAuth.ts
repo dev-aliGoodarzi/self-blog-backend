@@ -19,6 +19,7 @@ import { authMiddleware } from "./Middlewares/authMiddleware";
 import { AdminUserModel } from "../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
 import { checkIsNull, T_ErrorData } from "../../../../Validators/checkIsNull";
 import { DoneStatusCode } from "../../../../Constants/Done/DoneStatusCode";
+import { UnKnownErrorSenderToClient } from "../../../../Constants/Errors/UnKnownErrorSenderToClient";
 // Services
 
 export const AdminAuth = Router();
@@ -110,11 +111,11 @@ AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
   const keys = Object.keys(body);
 
   try {
-    const desierdUser = await AdminUserModel.findOne({
+    const desiredUser = await AdminUserModel.findOne({
       email: req.userEmail,
     });
 
-    if (desierdUser!.isRegisterCompleted) {
+    if (desiredUser!.isRegisterCompleted) {
       ErrorSenderToClient(
         {
           data: {},
@@ -168,32 +169,17 @@ AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
         return;
       }
 
-      desierdUser!.name = body["name"];
-      desierdUser!.lastName = body["lastName"];
-      desierdUser!.isRegisterCompleted = true;
+      desiredUser!.name = body["name"];
+      desiredUser!.lastName = body["lastName"];
+      desiredUser!.isRegisterCompleted = true;
 
-      await desierdUser!.save();
+      await desiredUser!.save();
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "userAuthCompleted"),
       });
     }
   } catch (err) {
-    ErrorSenderToClient(
-      {
-        data: err,
-        errorData: {
-          errorKey: "",
-          errorMessage: getWordBasedOnCurrLang(
-            language as T_ValidLanguages,
-            "unKnownError"
-          ),
-        },
-        expectedType: "string",
-      },
-      ErrorsStatusCode.notAcceptable.standardStatusCode,
-      res
-    );
-    console.log(err);
+    UnKnownErrorSenderToClient({ req, res }, err);
   }
 });

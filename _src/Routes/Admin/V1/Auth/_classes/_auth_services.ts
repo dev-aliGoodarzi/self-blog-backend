@@ -51,7 +51,7 @@ export class _auth_services {
       const allAdminUsersCount = await AdminUserModel.find({});
 
       const newUserData: T_UserSchema = {
-        email,
+        email: email.toLowerCase(),
         isRegisterCompleted: false,
         lastName: "",
         name: "",
@@ -60,6 +60,7 @@ export class _auth_services {
         userId: `ADMIN_${Date.now()}_${allAdminUsersCount.length}`,
         refreshToken: "",
         userToken: "",
+        blogs: [],
       };
 
       const newUser = new AdminUserModel(newUserData);

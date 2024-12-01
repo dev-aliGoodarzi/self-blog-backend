@@ -6,6 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserSchema = void 0;
 // Mongoose
 const mongoose_1 = __importDefault(require("mongoose"));
+// Mongoose
+// Schemas
+const BlogSchema_1 = require("../Blog/BlogSchema");
 exports.UserSchema = new mongoose_1.default.Schema({
     name: String,
     lastName: String,
@@ -15,5 +18,6 @@ exports.UserSchema = new mongoose_1.default.Schema({
     refreshToken: String,
     userId: String,
     isRegisterCompleted: Boolean,
+    blogs: [BlogSchema_1.BlogSchema],
     role: String, // ADMIN | NORMAL_USER
 });

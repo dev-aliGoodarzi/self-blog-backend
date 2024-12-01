@@ -18,4 +18,5 @@ exports.fa_lang = {
     notExistedUser: "کاربر مورد نظر ، موجود نیست",
     unKnownError: "خطای نامشخص",
     userAuthCompleted: "احراز هویت کامل شد",
+    thisEmailAlreadyExists: "این ایمیل قبلا برای کاربر دیگری ثبت شده",
 };
