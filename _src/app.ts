@@ -16,6 +16,10 @@ import {
 require("dotenv").config();
 // Configs
 
+// Modules
+import path from "path";
+// Modules
+
 import swaggerUi from "swagger-ui-express";
 
 // #region #init
@@ -80,10 +84,15 @@ app.use((req, res, next) => {
  */
 // #region API DOCUMANTS
 app.use(
+  "/swagger-static-files",
+  express.static(path.join(__dirname, "../Swagger/CSS"))
+);
+app.use(
   "/documentation/swagger-ui",
   swaggerUi.serve,
   swaggerUi.setup(require("./../Swagger/SwaggerJson.json"), {
     explorer: true,
+    customJs: "/swagger-static-files/custom-js.js",
   })
 );
 /*

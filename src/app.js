@@ -15,6 +15,9 @@ const languageTypes_1 = require("./Constants/Languages/languageTypes");
 // Configs
 require("dotenv").config();
 // Configs
+// Modules
+const path_1 = __importDefault(require("path"));
+// Modules
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 // #region #init
 const app = (0, express_1.default)();
@@ -73,8 +76,10 @@ app.use((req, res, next) => {
  *
  */
 // #region API DOCUMANTS
+app.use("/swagger-static-files", express_1.default.static(path_1.default.join(__dirname, "../Swagger/CSS")));
 app.use("/documentation/swagger-ui", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(require("./../Swagger/SwaggerJson.json"), {
     explorer: true,
+    customJs: "/swagger-static-files/custom-js.js",
 }));
 /*
  *

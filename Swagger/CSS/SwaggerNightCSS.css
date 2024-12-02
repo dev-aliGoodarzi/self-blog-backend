@@ -1,0 +1,22 @@
+body,
+.swagger-ui {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+.swagger-ui .topbar {
+  background-color: #262626 !important;
+}
+.swagger-ui .opblock {
+  background-color: #2e2e2e !important;
+}
+.swagger-ui .opblock-summary {
+  color: #ffffff !important;
+}
+.swagger-ui .opblock-summary-method {
+  background-color: #3e3e3e !important;
+  color: #ffffff !important;
+}
+.swagger-ui .parameter__name,
+.swagger-ui .parameter__description {
+  color: #ffffff !important;
+}

@@ -323,6 +323,47 @@
         "tags": ["Profile"]
       }
     },
+    "/admin/v1/profile/edit/extra/image": {
+      "put": {
+        "summary": "Edit User Avatar",
+        "operationId": "Edit User Avatar",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "avatar",
+            "type": "file",
+            "required": true,
+            "description": "New Admin User Avatar"
+          },
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "When Operation Done => it returns 200 & Successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "successful"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Profile"]
+      }
+    },
     "// PROFILE_END": {}
   },
   "definitions": {
