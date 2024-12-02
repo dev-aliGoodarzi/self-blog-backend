@@ -30,6 +30,7 @@ const formats_1 = require("../../../../../Formats/formats");
 // Formats
 // Utils
 const addDataToExistingObject_1 = require("../../../../../Utils/DataAdder/addDataToExistingObject");
+const notFoundCurrentUser_1 = require("../../Auth/Middlewares/notFoundCurrentUser");
 // Utils
 class UpdateAdminProfileClasses {
     static updateBasicAdminProfileData(req, res) {
@@ -63,6 +64,10 @@ class UpdateAdminProfileClasses {
                 const desiredUser = yield UserModel_1.AdminUserModel.findOne({
                     email: userEmail,
                 });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
                 desiredUser.name = req.body["name"];
                 desiredUser.lastName = req.body["lastName"];
                 //   desiredUser!.email = req.body["email"];
@@ -102,6 +107,10 @@ class UpdateAdminProfileClasses {
                 const desiredUser = yield UserModel_1.AdminUserModel.findOne({
                     email: userEmail,
                 });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
                 const isDuplicateEmail = yield (() => __awaiter(this, void 0, void 0, function* () {
                     if (userEmail === req.body["email"])
                         return false;
@@ -132,6 +141,33 @@ class UpdateAdminProfileClasses {
             catch (err) {
                 (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
             }
+        });
+    }
+    static updateAdminUserProfileImage(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const language = req.headers.language;
+            const { userEmail } = req;
+            const desiredUser = yield UserModel_1.AdminUserModel.findOne({ email: userEmail });
+            if (!desiredUser) {
+                (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                return;
+            }
+            if (req.file) {
+                desiredUser.image = req.file.filename;
+                yield desiredUser.save();
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                });
+                return;
+            }
+            (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                data: {},
+                errorData: {
+                    errorKey: "THIS_API_ONLY_ACCEPT_IMAGE",
+                    errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                },
+                expectedType: "file",
+            }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
         });
     }
 }

@@ -54,6 +54,7 @@ class _auth_services {
                     userId: `ADMIN_${Date.now()}_${allAdminUsersCount.length}`,
                     refreshToken: "",
                     userToken: "",
+                    image: "",
                     blogs: [],
                 };
                 const newUser = new UserModel_1.AdminUserModel(newUserData);

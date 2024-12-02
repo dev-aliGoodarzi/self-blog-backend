@@ -45,7 +45,7 @@
             }
           }
         },
-        "tags": ["Auth"]
+        "tags": ["Authentication"]
       }
     },
     "/admin/v1/auth-register": {
@@ -84,10 +84,126 @@
             }
           }
         },
-        "tags": ["Auth"]
+        "tags": ["Authentication"]
       }
     },
-    "COMMENT_AUTH_END": {}
+    "/admin/v1/auth-resubmit-user-auth": {
+      "post": {
+        "summary": "Complete Admin Auth - Call It After Login When isRegistered is false",
+        "operationId": "Complete-Register-Admin",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "loginData",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/completeAuthData"
+            }
+          },
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "string",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string",
+                  "example": "successful"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Authentication"]
+      }
+    },
+    "// COMMENT_AUTH_END": {},
+    "// PROFILE_START": {},
+    "/admin/v1/profile": {
+      "get": {
+        "summary": "Get Current User Profile - Based On Sending Token",
+        "operationId": "Get_Admin_Profile",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get User Profile Data",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                },
+                "schema": {
+                  "$ref": "#/definitions/AdminProfile"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Profile"]
+      }
+    },
+    "/admin/v1/profile/avatar": {
+      "get": {
+        "summary": "Get Current User Profile Avatar - Based On Sending Token",
+        "operationId": "Get_Admin_Profile",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get User Profile Data",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                },
+                "schema": {
+                  "$ref": "#/definitions/AdminProfile"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Profile"]
+      }
+    },
+    "// PROFILE_END": {}
   },
   "definitions": {
     "loginPostData": {
@@ -95,11 +211,11 @@
       "properties": {
         "email": {
           "type": "string",
-          "example": "me74242@gmail.com"
+          "example": "email@email.com"
         },
         "password": {
           "type": "string",
-          "example": "Ali1379@"
+          "example": "password with at least 8 char + symbol + number"
         }
       },
       "required": ["email", "password"]
@@ -109,14 +225,79 @@
       "properties": {
         "email": {
           "type": "string",
-          "example": "me74242@gmail.com"
+          "example": "email@email.com"
         },
         "password": {
           "type": "string",
-          "example": "Ali1379@"
+          "example": "password with at least 8 char + symbol + number"
         }
       },
       "required": ["email", "password"]
+    },
+    "completeAuthData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "email@email.com"
+        },
+        "lastName": {
+          "type": "string",
+          "example": "lastName"
+        }
+      },
+      "required": ["name", "lastName"]
+    },
+    "AdminProfile": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "example": "example"
+            },
+            "lastName": {
+              "type": "string",
+              "example": "example"
+            },
+            "email": {
+              "type": "string",
+              "example": "example"
+            },
+            "userId": {
+              "type": "string",
+              "example": "example"
+            },
+            "isRegisterCompleted": {
+              "type": "boolean",
+              "example": false
+            },
+            "blogs": { "type": "string" },
+            "role": {
+              "type": "string",
+              "example": "ADMIN | USER"
+            },
+            "image": {
+              "type": "string",
+              "example": "Image File Name"
+            }
+          }
+        },
+        "message": {
+          "type": "string",
+          "example": "successful"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "SimpleAuth": {
+      "type": "apiKey",
+      "name": "auth-token",
+      "in": "header",
+      "description": "Place Your Token here => WITHOUT Bearer"
     }
   }
 }

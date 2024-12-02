@@ -33,7 +33,7 @@ import { formats } from "../../../../../Formats/formats";
 
 // Utils
 import { addDataToExistingObject } from "../../../../../Utils/DataAdder/addDataToExistingObject";
-import bodyParser from "body-parser";
+import { notFoundCurrentUser } from "../../Auth/Middlewares/notFoundCurrentUser";
 // Utils
 
 export class UpdateAdminProfileClasses {
@@ -85,11 +85,16 @@ export class UpdateAdminProfileClasses {
         email: userEmail,
       });
 
-      desiredUser!.name = req.body["name"];
-      desiredUser!.lastName = req.body["lastName"];
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      desiredUser.name = req.body["name"];
+      desiredUser.lastName = req.body["lastName"];
       //   desiredUser!.email = req.body["email"];
 
-      await desiredUser!.save();
+      await desiredUser.save();
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
@@ -142,6 +147,11 @@ export class UpdateAdminProfileClasses {
         email: userEmail,
       });
 
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
       const isDuplicateEmail = await (async () => {
         if (userEmail === req.body["email"]) return false;
 
@@ -170,9 +180,9 @@ export class UpdateAdminProfileClasses {
         return;
       }
 
-      desiredUser!.email = req.body["email"];
+      desiredUser.email = req.body["email"];
 
-      await desiredUser!.save();
+      await desiredUser.save();
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
@@ -180,5 +190,40 @@ export class UpdateAdminProfileClasses {
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);
     }
+  }
+
+  static async updateAdminUserProfileImage(req: Request, res: Response) {
+    const language = req.headers.language as T_ValidLanguages;
+    const { userEmail } = req;
+    const desiredUser = await AdminUserModel.findOne({ email: userEmail });
+
+    if (!desiredUser) {
+      notFoundCurrentUser({ req, res });
+      return;
+    }
+
+    if (req.file) {
+      desiredUser.image = req.file.filename;
+
+      await desiredUser.save();
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "operationSuccess"),
+      });
+      return;
+    }
+
+    ErrorSenderToClient(
+      {
+        data: {},
+        errorData: {
+          errorKey: "THIS_API_ONLY_ACCEPT_IMAGE",
+          errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+        },
+        expectedType: "file",
+      },
+      ErrorsStatusCode.notAcceptable.standardStatusCode,
+      res
+    );
   }
 }

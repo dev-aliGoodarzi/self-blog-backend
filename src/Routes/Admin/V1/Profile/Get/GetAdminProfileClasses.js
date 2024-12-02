@@ -19,6 +19,9 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetProfileClasses = void 0;
 // Express
@@ -27,26 +30,76 @@ const notFoundCurrentUser_1 = require("../../Auth/Middlewares/notFoundCurrentUse
 // Middlewares
 // Models
 const UserModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
+// Models
+// Constants
 const DoneStatusCode_1 = require("../../../../../Constants/Done/DoneStatusCode");
 const Languages_1 = require("../../../../../Constants/Languages");
-// Models
+const UnKnownErrorSenderToClient_1 = require("../../../../../Constants/Errors/UnKnownErrorSenderToClient");
+// Constants
+// Modules
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const ErrorSenderToClient_1 = require("../../../../../Constants/Errors/ErrorSenderToClient");
+const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatusCode");
+// Modules
 class GetProfileClasses {
     static getCurrentAdminProfile(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const language = req.headers.language;
-            const { userEmail } = req;
-            const desierdUser = yield UserModel_1.AdminUserModel.findOne({
-                email: userEmail,
-            });
-            if (!desierdUser) {
-                (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
-                return;
+            try {
+                const language = req.headers.language;
+                const { userEmail } = req;
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
+                const _a = desiredUser.toJSON(), { password, userToken, refreshToken, _id } = _a, others = __rest(_a, ["password", "userToken", "refreshToken", "_id"]);
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "successful"),
+                    data: others,
+                });
             }
-            const _a = desierdUser.toJSON(), { password, userToken, refreshToken, _id } = _a, others = __rest(_a, ["password", "userToken", "refreshToken", "_id"]);
-            res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
-                message: (0, Languages_1.getWordBasedOnCurrLang)(language, "successful"),
-                data: others,
-            });
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
+    static getAdminAvatar(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const { userEmail } = req;
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
+                const filePath = path_1.default.resolve(__dirname, `./../../../../../../uploads/${desiredUser.image}`);
+                fs_1.default.readFile(filePath, { encoding: "base64" }, (err, data) => {
+                    if (err) {
+                        (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                            data: {},
+                            errorData: {
+                                errorKey: "NO_AVATAR_IN_THIS_USER_DATA || MAYBE_FILE_REMOVED",
+                                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                            },
+                            expectedType: "file",
+                        }, ErrorsStatusCode_1.ErrorsStatusCode.notExist.standardStatusCode, res);
+                        return next(err);
+                    }
+                    res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                        message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                        data: `data:image/jpg;base64,${data}`,
+                    });
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
         });
     }
 }

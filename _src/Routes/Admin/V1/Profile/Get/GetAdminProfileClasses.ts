@@ -8,32 +8,95 @@ import { notFoundCurrentUser } from "../../Auth/Middlewares/notFoundCurrentUser"
 
 // Models
 import { AdminUserModel } from "../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
+// Models
+
+// Constants
 import { DoneStatusCode } from "../../../../../Constants/Done/DoneStatusCode";
 import { getWordBasedOnCurrLang } from "../../../../../Constants/Languages";
 import { T_ValidLanguages } from "../../../../../Constants/Languages/languageTypes";
-// Models
+import { UnKnownErrorSenderToClient } from "../../../../../Constants/Errors/UnKnownErrorSenderToClient";
+// Constants
+
+// Modules
+import path from "path";
+import fs from "fs";
+import { ErrorSenderToClient } from "../../../../../Constants/Errors/ErrorSenderToClient";
+import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
+// Modules
 
 export class GetProfileClasses {
   static async getCurrentAdminProfile(req: Request, res: Response) {
-    const language = req.headers.language as T_ValidLanguages;
+    try {
+      const language = req.headers.language as T_ValidLanguages;
 
-    const { userEmail } = req;
+      const { userEmail } = req;
 
-    const desierdUser = await AdminUserModel.findOne({
-      email: userEmail,
-    });
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
 
-    if (!desierdUser) {
-      notFoundCurrentUser({ req, res });
-      return;
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      const { password, userToken, refreshToken, _id, ...others } =
+        desiredUser.toJSON();
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "successful"),
+        data: others,
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
     }
+  }
 
-    const { password, userToken, refreshToken, _id, ...others } =
-      desierdUser.toJSON();
+  static async getAdminAvatar(req: Request, res: Response, next: any) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
 
-    res.status(DoneStatusCode.done.standardStatusCode).json({
-      message: getWordBasedOnCurrLang(language, "successful"),
-      data: others,
-    });
+      const { userEmail } = req;
+
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
+
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      const filePath = path.resolve(
+        __dirname,
+        `./../../../../../../uploads/${desiredUser.image}`
+      );
+
+      fs.readFile(filePath, { encoding: "base64" }, (err, data) => {
+        if (err) {
+          ErrorSenderToClient(
+            {
+              data: {},
+              errorData: {
+                errorKey: "NO_AVATAR_IN_THIS_USER_DATA || MAYBE_FILE_REMOVED",
+                errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+              },
+              expectedType: "file",
+            },
+            ErrorsStatusCode.notExist.standardStatusCode,
+            res
+          );
+
+          return next(err);
+        }
+
+        res.status(DoneStatusCode.done.standardStatusCode).json({
+          message: getWordBasedOnCurrLang(language, "operationSuccess"),
+          data: `data:image/jpg;base64,${data}`,
+        });
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
   }
 }

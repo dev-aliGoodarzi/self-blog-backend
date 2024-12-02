@@ -14,12 +14,33 @@ import { GetProfileClasses } from "./Get/GetAdminProfileClasses";
 import { UpdateAdminProfileClasses } from "./Update/UpdateAdminProfileClasses";
 // Update Handlers
 
+// Multer
+import multer from "multer";
+// Multer
+
 export const AdminProfileRoutes = Router();
+
+const upload = multer({
+  dest: "uploads/",
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  },
+});
 
 AdminProfileRoutes.get(
   "/profile",
   authMiddleware,
   GetProfileClasses.getCurrentAdminProfile
+);
+
+AdminProfileRoutes.get(
+  "/profile/avatar",
+  authMiddleware,
+  GetProfileClasses.getAdminAvatar
 );
 
 AdminProfileRoutes.put(
@@ -34,3 +55,9 @@ AdminProfileRoutes.patch(
   UpdateAdminProfileClasses.updateBasicAdminProfileEmail
 );
 
+AdminProfileRoutes.put(
+  "/profile/edit/extra/image",
+  authMiddleware,
+  upload.single("avatar"),
+  UpdateAdminProfileClasses.updateAdminUserProfileImage
+);

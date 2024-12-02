@@ -12,15 +12,20 @@ export type T_BasicUserData = {
   email: string;
 };
 
-export type T_UserSchema = T_BasicUserData & {
-  password: string;
-  userToken: string;
-  refreshToken: string;
-  userId: string;
-  isRegisterCompleted: boolean;
-  blogs: T_BlogSchema[];
-  role: "ADMIN" | "NORMAL_USER";
+export type T_AdminExtraData = {
+  image: string;
 };
+
+export type T_UserSchema = T_BasicUserData &
+  T_AdminExtraData & {
+    password: string;
+    userToken: string;
+    refreshToken: string;
+    userId: string;
+    isRegisterCompleted: boolean;
+    blogs: T_BlogSchema[];
+    role: "ADMIN" | "NORMAL_USER";
+  };
 
 export const UserSchema = new mongoose.Schema<T_UserSchema>({
   name: String,
@@ -32,5 +37,6 @@ export const UserSchema = new mongoose.Schema<T_UserSchema>({
   userId: String,
   isRegisterCompleted: Boolean,
   blogs: [BlogSchema],
+  image: String,
   role: String, // ADMIN | NORMAL_USER
 });

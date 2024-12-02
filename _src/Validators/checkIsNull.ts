@@ -5,7 +5,7 @@ export type T_ErrorData = {
 
 export type T_ErrorDataType<T> = {
   data?: T;
-  expectedType: "string" | "number";
+  expectedType: "string" | "number" | "file";
   errorData: T_ErrorData;
 };
 

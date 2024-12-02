@@ -19,5 +19,6 @@ exports.UserSchema = new mongoose_1.default.Schema({
     userId: String,
     isRegisterCompleted: Boolean,
     blogs: [BlogSchema_1.BlogSchema],
+    image: String,
     role: String, // ADMIN | NORMAL_USER
 });
