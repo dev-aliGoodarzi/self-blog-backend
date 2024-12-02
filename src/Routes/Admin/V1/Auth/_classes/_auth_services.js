@@ -120,6 +120,7 @@ class _auth_services {
             selectedAdmin.refreshToken = refreshToken;
             yield selectedAdmin.save();
             pipeData.res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).send({
+                message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
                 data: selectedAdmin.toObject(),
             });
             return selectedAdmin;

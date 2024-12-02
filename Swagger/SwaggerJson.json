@@ -25,10 +25,7 @@
           {
             "in": "header",
             "name": "language",
-            "required": false,
-            "schema": {
-              "language": "fa | en"
-            }
+            "required": false
           }
         ],
         "responses": {
@@ -129,6 +126,45 @@
         "tags": ["Authentication"]
       }
     },
+    "/admin/v1/auth-refresh": {
+      "post": {
+        "summary": "Get New Access&Refresh Token - based on RefreshToken",
+        "operationId": "Generate New Token",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "header",
+            "name": "auth-refresh",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "string",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "example": {
+                    "message": "string",
+                    "accessToken": "string",
+                    "refreshToken": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Authentication"]
+      }
+    },
     "// COMMENT_AUTH_END": {},
     "// PROFILE_START": {},
     "/admin/v1/profile": {
@@ -195,6 +231,90 @@
                 },
                 "schema": {
                   "$ref": "#/definitions/AdminProfile"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Profile"]
+      }
+    },
+    "/admin/v1/profile/edit/basic": {
+      "put": {
+        "summary": "Edit Basic User Profile Data -> Name , Lastname",
+        "operationId": "Edit User Basic Data",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/editBasicProfileSendingData"
+            }
+          },
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "When Operation Done => it returns 200 & Successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "successful"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Profile"]
+      }
+    },
+    "/admin/v1/profile/edit/basic/email": {
+      "patch": {
+        "summary": "Edit Admin Email",
+        "operationId": "Edit Admin Email Address",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/completeAuthData"
+            }
+          },
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "When Operation Done => it returns 200 & Successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "successful"
                 }
               }
             }
@@ -288,6 +408,28 @@
         "message": {
           "type": "string",
           "example": "successful"
+        }
+      }
+    },
+    "editBasicProfileSendingData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "Name -> Ali"
+        },
+        "lastName": {
+          "type": "string",
+          "example": "lastName -> Goodarzi"
+        }
+      }
+    },
+    "editBasicProfileDataEmail": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "Email -> me74242@gmail.com"
         }
       }
     }

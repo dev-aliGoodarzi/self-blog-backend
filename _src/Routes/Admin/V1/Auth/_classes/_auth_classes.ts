@@ -27,6 +27,11 @@ import { T_UserSchema } from "../../../../../MongodbDataManagement/MongoDB_Schem
 // Services
 import { _auth_services } from "./_auth_services";
 import { AdminUserModel } from "../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
+import { ErrorSenderToClient } from "../../../../../Constants/Errors/ErrorSenderToClient";
+import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
+import { notFoundCurrentUser } from "../Middlewares/notFoundCurrentUser";
+import { generateNewToken } from "../../../../../Utils/Generators/generateNewToken";
+import { DoneStatusCode } from "../../../../../Constants/Done/DoneStatusCode";
 // Services
 
 export class _auth_classes {
@@ -166,5 +171,75 @@ export class _auth_classes {
 
     if (Object.keys(errors).length > 0) return errors;
     return "doneForContinue";
+  }
+
+  static async buildNewToken(req: Request, res: Response) {
+    const refreshToken = req.headers["auth-refresh"];
+    const language = req.headers.language as T_ValidLanguages;
+
+    const errors: { [key: string]: any } = {};
+
+    checkIsNull(
+      refreshToken,
+      "string",
+      {
+        errorKey: "email",
+        errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+      },
+      (_errData, errKey) => {
+        errors[errKey] = _errData;
+      }
+    );
+
+    if (Object.keys(errors).length > 0) {
+      ErrorSenderToClient(
+        {
+          data: {},
+          errorData: {
+            errorKey: "",
+            errorMessage: getWordBasedOnCurrLang(
+              language as T_ValidLanguages,
+              "wrongType"
+            ),
+          },
+          expectedType: "string",
+        },
+        ErrorsStatusCode.notAcceptable.standardStatusCode,
+        res
+      );
+      return;
+    }
+
+    const desiredUser = await AdminUserModel.findOne({ refreshToken });
+
+    if (!desiredUser) {
+      notFoundCurrentUser({ req, res });
+      return;
+    }
+    const newAccessToken = generateNewToken(
+      {
+        email: desiredUser.email as string,
+        id: desiredUser.userId as string,
+      },
+      "1h"
+    );
+
+    const newRefreshToken = generateNewToken(
+      {
+        email: desiredUser.email as string,
+        id: desiredUser.userId as string,
+      },
+      "2d"
+    );
+
+    desiredUser.userToken = newAccessToken;
+    desiredUser.refreshToken = newRefreshToken;
+
+    await desiredUser.save();
+
+    res.status(DoneStatusCode.done.standardStatusCode).send({
+      message: getWordBasedOnCurrLang(language, "operationSuccess"),
+      data: { userToken: newAccessToken, refreshToken: newRefreshToken },
+    });
   }
 }

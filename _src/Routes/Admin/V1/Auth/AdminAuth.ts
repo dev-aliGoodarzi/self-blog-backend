@@ -103,6 +103,8 @@ AdminAuth.post("/auth-login", async (req, res) => {
   });
 });
 
+AdminAuth.post("/auth-refresh", _auth_classes.buildNewToken);
+
 AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
   const language = req.headers.language as T_ValidLanguages;
 

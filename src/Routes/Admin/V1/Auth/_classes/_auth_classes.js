@@ -27,6 +27,11 @@ const checkIsValidByPattern_1 = require("../../../../../Validators/checkIsValidB
 // Services
 const _auth_services_1 = require("./_auth_services");
 const UserModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
+const ErrorSenderToClient_1 = require("../../../../../Constants/Errors/ErrorSenderToClient");
+const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatusCode");
+const notFoundCurrentUser_1 = require("../Middlewares/notFoundCurrentUser");
+const generateNewToken_1 = require("../../../../../Utils/Generators/generateNewToken");
+const DoneStatusCode_1 = require("../../../../../Constants/Done/DoneStatusCode");
 // Services
 class _auth_classes {
     static registerUserDataValidate(req) {
@@ -116,6 +121,50 @@ class _auth_classes {
             if (Object.keys(errors).length > 0)
                 return errors;
             return "doneForContinue";
+        });
+    }
+    static buildNewToken(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const refreshToken = req.headers["auth-refresh"];
+            const language = req.headers.language;
+            const errors = {};
+            (0, checkIsNull_1.checkIsNull)(refreshToken, "string", {
+                errorKey: "email",
+                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+            }, (_errData, errKey) => {
+                errors[errKey] = _errData;
+            });
+            if (Object.keys(errors).length > 0) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: {},
+                    errorData: {
+                        errorKey: "",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                    },
+                    expectedType: "string",
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
+            const desiredUser = yield UserModel_1.AdminUserModel.findOne({ refreshToken });
+            if (!desiredUser) {
+                (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                return;
+            }
+            const newAccessToken = (0, generateNewToken_1.generateNewToken)({
+                email: desiredUser.email,
+                id: desiredUser.userId,
+            }, "1h");
+            const newRefreshToken = (0, generateNewToken_1.generateNewToken)({
+                email: desiredUser.email,
+                id: desiredUser.userId,
+            }, "2d");
+            desiredUser.userToken = newAccessToken;
+            desiredUser.refreshToken = newRefreshToken;
+            yield desiredUser.save();
+            res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).send({
+                message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                data: { userToken: newAccessToken, refreshToken: newRefreshToken },
+            });
         });
     }
 }

@@ -83,6 +83,7 @@ exports.AdminAuth.post("/auth-login", (req, res) => __awaiter(void 0, void 0, vo
         res,
     });
 }));
+exports.AdminAuth.post("/auth-refresh", _auth_classes_1._auth_classes.buildNewToken);
 exports.AdminAuth.post("/auth-resubmit-user-auth", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const language = req.headers.language;
     const { body } = req;

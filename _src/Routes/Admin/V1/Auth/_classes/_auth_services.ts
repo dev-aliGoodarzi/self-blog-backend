@@ -165,6 +165,7 @@ export class _auth_services {
     await selectedAdmin.save();
 
     pipeData.res.status(DoneStatusCode.done.standardStatusCode).send({
+      message: getWordBasedOnCurrLang(language, "operationSuccess"),
       data: selectedAdmin.toObject(),
     });
 
