@@ -74,7 +74,7 @@ app.use((req, res, next) => {
 
 app.get("/", (_, res) => {
   res.status(200).json({
-    message: "Server Works Normally And Fine",
+    message: "Server Works Normally ",
   });
 });
 /*
