@@ -580,7 +580,7 @@
     },
     "/admin/v1/blog/get-blog/{blogId}": {
       "get": {
-        "summary": "Get Single Blog Based on Your Activity ( only for your blogs )",
+        "summary": "Get Single Blog Based on Your Activity ( only token owner blog )",
         "operationId": "Get Self Blogs",
         "security": [
           {
