@@ -71,6 +71,12 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+app.get("/", (_, res) => {
+  res.status(200).json({
+    message: "Server Works Normally",
+  });
+});
 /*
  *
  *
