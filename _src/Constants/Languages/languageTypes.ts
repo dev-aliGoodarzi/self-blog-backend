@@ -21,4 +21,10 @@ export type T_LanguageKeys =
   | "notExistedUser"
   | "unKnownError"
   | "userAuthCompleted"
-  | "thisEmailAlreadyExists";
+  | "thisEmailAlreadyExists"
+  | "tagsMissMatch"
+  | "expiredToken"
+  | "resetPasswordEmailSend"
+  | "lengthIsLittleThanDesire"
+  | "notAuthCompleted"
+  | "notFoundDesiredBlog";

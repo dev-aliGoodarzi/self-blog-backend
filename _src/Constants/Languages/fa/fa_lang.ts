@@ -20,4 +20,12 @@ export const fa_lang: Record<T_LanguageKeys, string> = {
   unKnownError: "خطای نامشخص",
   userAuthCompleted: "احراز هویت کامل شد",
   thisEmailAlreadyExists: "این ایمیل قبلا برای کاربر دیگری ثبت شده",
+  tagsMissMatch: "تک موردنظر ، در لیست تگ های قابل قبول نیست .",
+  expiredToken: "توکن مربوطه منقضی شده",
+  resetPasswordEmailSend:
+    "درخواست لینک ریست پسوورد برای شما از طریق ایمیل ارسال شد ، لطفا از آن لینک استفاده کنید",
+  lengthIsLittleThanDesire: "طول رشته ی ارسالی از حد مجاز کمتر است",
+  notAuthCompleted:
+    "احراز هویت کامل نشده ، لطفا ابتدا احراز هویت کنید تا به تمامی قسمت ها دسترسی داشته باشید .",
+  notFoundDesiredBlog: "آیدی بلاگ ارسالی معتبر نمیباشد یا قبلا حذف شده است .",
 };

@@ -12,6 +12,7 @@ import { T_UserSchema } from "../../../../../MongodbDataManagement/MongoDB_Schem
 
 // Utils
 import bcrypt from "bcrypt";
+import { generateNewToken } from "../../../../../Utils/Generators/generateNewToken";
 // Utils
 
 // Constants
@@ -20,7 +21,6 @@ import { T_ValidLanguages } from "../../../../../Constants/Languages/languageTyp
 import { getWordBasedOnCurrLang } from "../../../../../Constants/Languages";
 import { ErrorSenderToClient } from "../../../../../Constants/Errors/ErrorSenderToClient";
 import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
-import { generateNewToken } from "../../../../../Utils/Generators/generateNewToken";
 // Constants
 
 export class _auth_services {
@@ -62,6 +62,7 @@ export class _auth_services {
         userToken: "",
         image: "",
         blogs: [],
+        userPasswordResetToken: "",
       };
 
       const newUser = new AdminUserModel(newUserData);
@@ -148,7 +149,7 @@ export class _auth_services {
         email: selectedAdmin.email as string,
         id: selectedAdmin.userId as string,
       },
-      "1h"
+      String(process.env.TOKEN_EXPIRE_TIME as string)
     );
 
     const refreshToken = generateNewToken(
@@ -156,17 +157,22 @@ export class _auth_services {
         email: selectedAdmin.email as string,
         id: selectedAdmin.userId as string,
       },
-      "2d"
+      String(process.env.REFRESH_TOKEN_EXPIRE_TIME as string)
     );
 
     selectedAdmin.userToken = accessToken;
     selectedAdmin.refreshToken = refreshToken;
 
-    await selectedAdmin.save();
+    const { userToken, refreshToken: adminRefreshToken, role } = selectedAdmin;
 
+    await selectedAdmin.save();
     pipeData.res.status(DoneStatusCode.done.standardStatusCode).send({
       message: getWordBasedOnCurrLang(language, "operationSuccess"),
-      data: selectedAdmin.toObject(),
+      data: {
+        userToken,
+        refreshToken: adminRefreshToken,
+        role,
+      },
     });
 
     return selectedAdmin;

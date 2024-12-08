@@ -5,11 +5,13 @@
     "version": "1.0.0"
   },
   "schemes": ["http", "https"],
+  "servers": ["localhost:8000", " api.self-blog.ir"],
+  "basePath": "",
   "consumes": ["application/json"],
   "produces": ["application/json"],
   "paths": {
     "// COMMENT_AUTH_START": {},
-    "/admin/v1/auth-login": {
+    "/admin/v1/auth/login": {
       "post": {
         "summary": "POST Admin Data (Email & Password) for Login",
         "operationId": "Login-Admin",
@@ -23,6 +25,7 @@
             }
           },
           {
+            "type": "string",
             "in": "header",
             "name": "language",
             "required": false
@@ -45,7 +48,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/admin/v1/auth-register": {
+    "/admin/v1/auth/register": {
       "post": {
         "summary": "POST Admin Data (Email & Password) for Register",
         "operationId": "Register-Admin",
@@ -61,10 +64,7 @@
           {
             "in": "header",
             "name": "language",
-            "required": false,
-            "schema": {
-              "language": "fa | en"
-            }
+            "required": false
           }
         ],
         "responses": {
@@ -84,7 +84,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/admin/v1/auth-resubmit-user-auth": {
+    "/admin/v1/auth/resubmit-user-auth": {
       "post": {
         "summary": "Complete Admin Auth - Call It After Login When isRegistered is false",
         "operationId": "Complete-Register-Admin",
@@ -126,7 +126,7 @@
         "tags": ["Authentication"]
       }
     },
-    "/admin/v1/auth-refresh": {
+    "/admin/v1/auth/refresh-token": {
       "post": {
         "summary": "Get New Access&Refresh Token - based on RefreshToken",
         "operationId": "Generate New Token",
@@ -157,6 +157,90 @@
                     "accessToken": "string",
                     "refreshToken": "string"
                   }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Authentication"]
+      }
+    },
+    "/admin/v1/auth/forget-password/step1": {
+      "post": {
+        "summary": "POST Admin Email For Send Password-Change Request",
+        "operationId": "Reset-Password-Admin",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sendForgetPasswordRequestStep1"
+            }
+          },
+          {
+            "type": "string",
+            "in": "header",
+            "name": "language",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If User Exists => Email Will Send to it => you will get 200 in every requests (4 security ;) ) ",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                },
+                "schema": {
+                  "$ref": "#/definitions/sendForgetPasswordRequestStep1Response"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Authentication"]
+      }
+    },
+    "/admin/v1/auth/forget-password/step2": {
+      "post": {
+        "summary": "POST Admin NewPassword + Password RefreshToken in same API for Auth What User is ",
+        "operationId": "Reset-Password-Admin2",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "newPassword",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sendForgetPasswordRequestStep2"
+            }
+          },
+          {
+            "in": "header",
+            "name": "password-forget-token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "type": "string",
+            "in": "header",
+            "name": "language",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If Token Is Valid (TimeBased , pointToValidUser) => you can change password ",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                },
+                "schema": {
+                  "$ref": "#/definitions/sendForgetPasswordRequestStep2Response"
                 }
               }
             }
@@ -206,7 +290,7 @@
     "/admin/v1/profile/avatar": {
       "get": {
         "summary": "Get Current User Profile Avatar - Based On Sending Token",
-        "operationId": "Get_Admin_Profile",
+        "operationId": "Get_Admin_Profile_Avatar",
         "security": [
           {
             "SimpleAuth": []
@@ -296,7 +380,7 @@
             "name": "email",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/completeAuthData"
+              "$ref": "#/definitions/editBasicProfileDataEmail"
             }
           },
           {
@@ -364,7 +448,183 @@
         "tags": ["Profile"]
       }
     },
-    "// PROFILE_END": {}
+    "// PROFILE_END": {},
+    "// BLOG_START": {},
+    "/admin/v1/blog/add-new": {
+      "post": {
+        "summary": "Add New Blog Item => Automatic Removes <script> tags ;)",
+        "operationId": "Add New BLog",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "title",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/addNewBlogSendingData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "string",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "example": {
+                    "message": "string",
+                    "accessToken": "string",
+                    "refreshToken": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "tags": ["Blog Management"]
+      }
+    },
+    "/admin/v1/blog/remove-blog/{blogId}": {
+      "delete": {
+        "summary": "Delete Single Blog By BlogId",
+        "operationId": "Delete Single BLog",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "blogId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "string",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+
+        "tags": ["Blog Management"]
+      }
+    },
+    "/admin/v1/blog/edit-blog/{blogId}": {
+      "patch": {
+        "summary": "Edit Single Blog By BlogId",
+        "operationId": "Edit Single BLog",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "blogId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "newData",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/addNewBlogSendingData"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "string",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+
+        "tags": ["Blog Management"]
+      }
+    },
+    "/admin/v1/blog/get-blog/{blogId}": {
+      "get": {
+        "summary": "Get Single Blog Based on Your Activity ( only for your blogs )",
+        "operationId": "Get Self Blogs",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "blogId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get Blog Details => JUST innerHTML , title , tags",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "schema": {
+                  "$ref": "#/definitions/addNewBlogSendingData"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Blog Management"]
+      }
+    },
+    "// BLOG_END": {}
   },
   "definitions": {
     "loginPostData": {
@@ -470,7 +730,94 @@
       "properties": {
         "email": {
           "type": "string",
-          "example": "Email -> me74242@gmail.com"
+          "example": "Email -> new.email@email.com"
+        }
+      }
+    },
+    "sendForgetPasswordRequestStep1": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "email@email.com"
+        }
+      },
+      "required": ["email"]
+    },
+    "sendForgetPasswordRequestStep1Response": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "example": "{message : 'success'}"
+        }
+      }
+    },
+    "sendForgetPasswordRequestStep2": {
+      "type": "object",
+      "properties": {
+        "newPassword": {
+          "type": "string",
+          "example": "password with at least 8 char + symbol + number"
+        }
+      },
+      "required": ["newPassword"]
+    },
+    "sendForgetPasswordRequestStep2Response": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "example": "{message : 'success'}"
+        }
+      }
+    },
+    "addNewBlogSendingData": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "simple title"
+        },
+        "innerHTML": {
+          "type": "string",
+          "example": "simple inner html"
+        },
+        "tags": {
+          "type": "string",
+          "example": "tags => send it with , separated"
+        }
+      },
+      "required": ["title", "innerHTML", "tags"]
+    },
+    "editBlogSendingData": {
+      "type": "string",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "email@email.com"
+        },
+        "lastName": {
+          "type": "string",
+          "example": "lastName"
+        }
+      },
+      "required": ["name", "lastName"]
+    },
+    "getSingleBlogData": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "example": "simple title"
+        },
+        "innerHTML": {
+          "type": "string",
+          "example": "simple inner html"
+        },
+        "tags": {
+          "type": "string",
+          "example": "tags => send it as array"
         }
       }
     }

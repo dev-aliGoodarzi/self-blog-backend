@@ -31,6 +31,7 @@ const formats_1 = require("../../../../../Formats/formats");
 // Utils
 const addDataToExistingObject_1 = require("../../../../../Utils/DataAdder/addDataToExistingObject");
 const notFoundCurrentUser_1 = require("../../Auth/Middlewares/notFoundCurrentUser");
+const BlogModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/Blog/BlogModel");
 // Utils
 class UpdateAdminProfileClasses {
     static updateBasicAdminProfileData(req, res) {
@@ -86,9 +87,9 @@ class UpdateAdminProfileClasses {
             try {
                 const language = req.headers.language;
                 const errors = {};
-                (0, checkIsValidByPattern_1.checkIsValidByPattern)(req.body["email"], formats_1.formats.email, (0, Languages_1.getWordBasedOnCurrLang)(language, "emailFormatError"), "email", (errData, errMessage, errorKey) => {
+                (0, checkIsValidByPattern_1.checkIsValidByPattern)(req.body["email"], formats_1.formats.email, (0, Languages_1.getWordBasedOnCurrLang)(language, "emailFormatError"), "email", (errData, errorMessage, errorKey) => {
                     errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
-                        errMessage,
+                        errorMessage,
                     });
                 });
                 if (Object.keys(errors).length > 0) {
@@ -133,6 +134,9 @@ class UpdateAdminProfileClasses {
                     return;
                 }
                 desiredUser.email = req.body["email"];
+                yield BlogModel_1.BlogModel.findOneAndUpdate({ publisherEmail: userEmail }, {
+                    publisherEmail: req.body["email"],
+                });
                 yield desiredUser.save();
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),

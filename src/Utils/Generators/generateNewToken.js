@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateNewToken = void 0;
 // JWT
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-// JWT
 const generateNewToken = (user, expireTime) => {
     // The payload is the user data you want to include in the token
     const payload = {

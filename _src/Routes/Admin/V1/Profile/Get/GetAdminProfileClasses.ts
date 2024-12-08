@@ -8,6 +8,7 @@ import { notFoundCurrentUser } from "../../Auth/Middlewares/notFoundCurrentUser"
 
 // Models
 import { AdminUserModel } from "../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
+import { BlogModel } from "../../../../../MongodbDataManagement/MongoDB_Models/Blog/BlogModel";
 // Models
 
 // Constants
@@ -15,13 +16,13 @@ import { DoneStatusCode } from "../../../../../Constants/Done/DoneStatusCode";
 import { getWordBasedOnCurrLang } from "../../../../../Constants/Languages";
 import { T_ValidLanguages } from "../../../../../Constants/Languages/languageTypes";
 import { UnKnownErrorSenderToClient } from "../../../../../Constants/Errors/UnKnownErrorSenderToClient";
+import { ErrorSenderToClient } from "../../../../../Constants/Errors/ErrorSenderToClient";
+import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
 // Constants
 
 // Modules
 import path from "path";
 import fs from "fs";
-import { ErrorSenderToClient } from "../../../../../Constants/Errors/ErrorSenderToClient";
-import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
 // Modules
 
 export class GetProfileClasses {
@@ -40,12 +41,14 @@ export class GetProfileClasses {
         return;
       }
 
+      const blogs = await BlogModel.find({ publisherEmail: userEmail });
+
       const { password, userToken, refreshToken, _id, ...others } =
         desiredUser.toJSON();
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "successful"),
-        data: others,
+        data: { ...others, blogs: blogs.map((item) => item.blogId) },
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);

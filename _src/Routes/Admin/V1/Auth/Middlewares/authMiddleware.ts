@@ -4,6 +4,7 @@ import { getWordBasedOnCurrLang } from "../../../../../Constants/Languages";
 import { T_ValidLanguages } from "../../../../../Constants/Languages/languageTypes";
 import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCode";
 import { AdminUserModel } from "../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
+import jwt from "jsonwebtoken";
 
 export const authMiddleware = async (
   req: Request,
@@ -23,6 +24,25 @@ export const authMiddleware = async (
           errorMessage: getWordBasedOnCurrLang(
             language as T_ValidLanguages,
             "noToken"
+          ),
+        },
+      },
+      ErrorsStatusCode.notAuthorized.standardStatusCode,
+      res
+    );
+    return;
+  }
+
+  if (String(userToken).length < 10) {
+    ErrorSenderToClient(
+      {
+        data: {},
+        expectedType: "string",
+        errorData: {
+          errorKey: "NOT_FOUND_TOKEN",
+          errorMessage: getWordBasedOnCurrLang(
+            language as T_ValidLanguages,
+            "lengthIsLittleThanDesire"
           ),
         },
       },
@@ -52,7 +72,53 @@ export const authMiddleware = async (
     return;
   }
 
-  req.userId = selectedUser.id;
-  req.userEmail = selectedUser.email;
-  next();
+  try {
+    const isValidToken = jwt.verify(
+      userToken as string,
+      String(process.env.JWT_SECRET)
+    );
+    if (isValidToken) {
+      if (selectedUser.isRegisterCompleted) {
+        req.userId = selectedUser.id;
+        req.userEmail = selectedUser.email;
+        next();
+        return;
+      } else {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_AUTH_COMPLETED",
+              errorMessage: getWordBasedOnCurrLang(
+                language,
+                "notAuthCompleted"
+              ),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+      }
+    } else {
+      throw new Error("Not Valid Token ... in Middleware");
+    }
+  } catch (err) {
+    console.log(err);
+    ErrorSenderToClient(
+      {
+        data: {},
+        expectedType: "string",
+        errorData: {
+          errorKey: "EXPIRED_TOKEN",
+          errorMessage: getWordBasedOnCurrLang(
+            language as T_ValidLanguages,
+            "expiredToken"
+          ),
+        },
+      },
+      ErrorsStatusCode.notAuthorized.standardStatusCode,
+      res
+    );
+  }
 };

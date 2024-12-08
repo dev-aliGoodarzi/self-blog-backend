@@ -19,4 +19,10 @@ export const en_lang: Record<T_LanguageKeys, string> = {
   unKnownError: "unKnownError",
   userAuthCompleted: "userAuthCompleted",
   thisEmailAlreadyExists: "thisEmailAlreadyExists",
+  tagsMissMatch: "tagsMissMatch",
+  expiredToken: "expiredToken",
+  resetPasswordEmailSend: "resetPasswordEmailSend",
+  lengthIsLittleThanDesire: "lengthIsLittleThanDesire",
+  notAuthCompleted: "notAuthCompleted",
+  notFoundDesiredBlog: "notFoundDesiredBlog",
 };

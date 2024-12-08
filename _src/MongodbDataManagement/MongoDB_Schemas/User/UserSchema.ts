@@ -25,6 +25,7 @@ export type T_UserSchema = T_BasicUserData &
     isRegisterCompleted: boolean;
     blogs: T_BlogSchema[];
     role: "ADMIN" | "NORMAL_USER";
+    userPasswordResetToken: string;
   };
 
 export const UserSchema = new mongoose.Schema<T_UserSchema>({
@@ -39,4 +40,5 @@ export const UserSchema = new mongoose.Schema<T_UserSchema>({
   blogs: [BlogSchema],
   image: String,
   role: String, // ADMIN | NORMAL_USER
+  userPasswordResetToken: String,
 });

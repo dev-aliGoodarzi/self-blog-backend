@@ -2,9 +2,11 @@
 import jwt from "jsonwebtoken";
 // JWT
 
+export type T_ExpireTime = "1h" | "1d" | "2d";
+
 export const generateNewToken = (
   user: { id: string; email: string },
-  expireTime: "1h" | "1d" | "2d"
+  expireTime: T_ExpireTime | string
 ) => {
   // The payload is the user data you want to include in the token
   const payload = {

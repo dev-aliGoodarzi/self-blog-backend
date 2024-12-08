@@ -19,4 +19,10 @@ exports.en_lang = {
     unKnownError: "unKnownError",
     userAuthCompleted: "userAuthCompleted",
     thisEmailAlreadyExists: "thisEmailAlreadyExists",
+    tagsMissMatch: "tagsMissMatch",
+    expiredToken: "expiredToken",
+    resetPasswordEmailSend: "resetPasswordEmailSend",
+    lengthIsLittleThanDesire: "lengthIsLittleThanDesire",
+    notAuthCompleted: "notAuthCompleted",
+    notFoundDesiredBlog: "notFoundDesiredBlog",
 };

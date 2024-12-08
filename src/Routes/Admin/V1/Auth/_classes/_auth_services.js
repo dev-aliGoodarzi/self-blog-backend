@@ -19,13 +19,13 @@ const UserModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models
 // Schema
 // Utils
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const generateNewToken_1 = require("../../../../../Utils/Generators/generateNewToken");
 // Utils
 // Constants
 const DoneStatusCode_1 = require("../../../../../Constants/Done/DoneStatusCode");
 const Languages_1 = require("../../../../../Constants/Languages");
 const ErrorSenderToClient_1 = require("../../../../../Constants/Errors/ErrorSenderToClient");
 const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatusCode");
-const generateNewToken_1 = require("../../../../../Utils/Generators/generateNewToken");
 // Constants
 class _auth_services {
     static isUserExist(useEmail) {
@@ -56,6 +56,7 @@ class _auth_services {
                     userToken: "",
                     image: "",
                     blogs: [],
+                    userPasswordResetToken: "",
                 };
                 const newUser = new UserModel_1.AdminUserModel(newUserData);
                 yield newUser.save();
@@ -111,17 +112,22 @@ class _auth_services {
             const accessToken = (0, generateNewToken_1.generateNewToken)({
                 email: selectedAdmin.email,
                 id: selectedAdmin.userId,
-            }, "1h");
+            }, String(process.env.TOKEN_EXPIRE_TIME));
             const refreshToken = (0, generateNewToken_1.generateNewToken)({
                 email: selectedAdmin.email,
                 id: selectedAdmin.userId,
-            }, "2d");
+            }, String(process.env.REFRESH_TOKEN_EXPIRE_TIME));
             selectedAdmin.userToken = accessToken;
             selectedAdmin.refreshToken = refreshToken;
+            const { userToken, refreshToken: adminRefreshToken, role } = selectedAdmin;
             yield selectedAdmin.save();
             pipeData.res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).send({
                 message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
-                data: selectedAdmin.toObject(),
+                data: {
+                    userToken,
+                    refreshToken: adminRefreshToken,
+                    role,
+                },
             });
             return selectedAdmin;
         });

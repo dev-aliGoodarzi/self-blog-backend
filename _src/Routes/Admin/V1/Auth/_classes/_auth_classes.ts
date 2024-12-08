@@ -24,6 +24,8 @@ import { checkIsValidByPattern } from "../../../../../Validators/checkIsValidByP
 import { T_UserSchema } from "../../../../../MongodbDataManagement/MongoDB_Schemas/User/UserSchema";
 // Schemas
 
+import nodemailer from "nodemailer";
+
 // Services
 import { _auth_services } from "./_auth_services";
 import { AdminUserModel } from "../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
@@ -32,6 +34,7 @@ import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCo
 import { notFoundCurrentUser } from "../Middlewares/notFoundCurrentUser";
 import { generateNewToken } from "../../../../../Utils/Generators/generateNewToken";
 import { DoneStatusCode } from "../../../../../Constants/Done/DoneStatusCode";
+import bcrypt from "bcrypt";
 // Services
 
 export class _auth_classes {
@@ -67,9 +70,9 @@ export class _auth_classes {
       formats.email,
       getWordBasedOnCurrLang(language, "emailFormatError"),
       "email",
-      (errData, errMessage, errorKey) => {
+      (errData, errorMessage, errorKey) => {
         errors[errorKey] = addDataToExistingObject(errors[errorKey], {
-          errMessage,
+          errorMessage,
         });
       }
     );
@@ -79,9 +82,9 @@ export class _auth_classes {
       formats.password,
       getWordBasedOnCurrLang(language, "passwordFormatError"),
       "password",
-      (errData, errMessage, errorKey) => {
+      (errData, errorMessage, errorKey) => {
         errors[errorKey] = addDataToExistingObject(errors[errorKey], {
-          errMessage,
+          errorMessage,
         });
       }
     );
@@ -183,7 +186,7 @@ export class _auth_classes {
       refreshToken,
       "string",
       {
-        errorKey: "email",
+        errorKey: "refreshToken",
         errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
       },
       (_errData, errKey) => {
@@ -191,10 +194,20 @@ export class _auth_classes {
       }
     );
 
+    if (String(refreshToken).length < 10) {
+      errors["auth-refresh"] = {
+        errorKey: "NOT_ACCEPTABLE_REFRESH-TOKEN",
+        errorMessage: getWordBasedOnCurrLang(
+          language as T_ValidLanguages,
+          "lengthIsLittleThanDesire"
+        ),
+      };
+    }
+
     if (Object.keys(errors).length > 0) {
       ErrorSenderToClient(
         {
-          data: {},
+          data: errors,
           errorData: {
             errorKey: "",
             errorMessage: getWordBasedOnCurrLang(
@@ -240,6 +253,175 @@ export class _auth_classes {
     res.status(DoneStatusCode.done.standardStatusCode).send({
       message: getWordBasedOnCurrLang(language, "operationSuccess"),
       data: { userToken: newAccessToken, refreshToken: newRefreshToken },
+    });
+  }
+
+  static async forgetPasswordStep1(req: Request, res: Response) {
+    const language = req.headers.language as T_ValidLanguages;
+
+    const errors: { [key: string]: any } = {};
+
+    checkIsValidByPattern(
+      req.body.email,
+      formats.email,
+      getWordBasedOnCurrLang(language, "emailFormatError"),
+      "email",
+      (errData, errorMessage, errorKey) => {
+        errors[errorKey] = addDataToExistingObject(errors[errorKey], {
+          errorMessage,
+        });
+      }
+    );
+
+    if (Object.keys(errors).length > 0) {
+      ErrorSenderToClient(
+        {
+          data: errors,
+          errorData: {
+            errorKey: "",
+            errorMessage: getWordBasedOnCurrLang(
+              language as T_ValidLanguages,
+              "wrongType"
+            ),
+          },
+          expectedType: "string",
+        },
+        ErrorsStatusCode.notAcceptable.standardStatusCode,
+        res
+      );
+      return;
+    }
+
+    try {
+      const desiredUser = await AdminUserModel.findOne({
+        email: req.body.email,
+      });
+
+      if (desiredUser) {
+        const refreshPasswordToken = generateNewToken(
+          {
+            email: desiredUser.email as string,
+            id: desiredUser.userId as string,
+          },
+          "1h"
+        );
+
+        desiredUser.userPasswordResetToken = refreshPasswordToken;
+
+        await desiredUser.save();
+        const transporter = nodemailer.createTransport({
+          host: "plesk.parsrad.com",
+          port: 465, // Use port 25 for SMTP
+          secure: true, // No SSL/TLS as per your setup
+          auth: {
+            user: "cccssss@my-template.ir",
+            pass: "0Gx9$q41w",
+          },
+        });
+
+        transporter.sendMail(
+          {
+            from: '"BlogAdmin" Email_Master',
+            to: desiredUser.email,
+            subject: "Test Email",
+            text: "Hello world?",
+            html: "<b>Hello world?</b>",
+          },
+          (error, info) => {
+            if (error) {
+              return console.log(error);
+            }
+            console.log("Message sent: %s", JSON.stringify(info));
+          }
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(
+          language as T_ValidLanguages,
+          "resetPasswordEmailSend"
+        ),
+      });
+    }
+  }
+  static async forgetPasswordStep2(req: Request, res: Response) {
+    const language = req.headers.language as T_ValidLanguages;
+
+    const errors: { [key: string]: any } = {};
+
+    const desiredUser = await AdminUserModel.findOne({
+      userPasswordResetToken: req.headers["password-forget-token"],
+    });
+
+    if (!desiredUser) {
+      ErrorSenderToClient(
+        {
+          data: errors,
+          errorData: {
+            errorKey: "",
+            errorMessage: `${getWordBasedOnCurrLang(
+              language as T_ValidLanguages,
+              "notExistedUser"
+            )} || ${getWordBasedOnCurrLang(
+              language as T_ValidLanguages,
+              "expiredToken"
+            )}`,
+          },
+          expectedType: "string",
+        },
+        ErrorsStatusCode.notAcceptable.standardStatusCode,
+        res
+      );
+      return;
+    }
+
+    checkIsValidByPattern(
+      req.body.newPassword,
+      formats.password,
+      getWordBasedOnCurrLang(language, "passwordFormatError"),
+      "newPassword",
+      (errData, errorMessage, errorKey) => {
+        errors[errorKey] = addDataToExistingObject(errors[errorKey], {
+          errorMessage,
+        });
+      }
+    );
+
+    if (Object.keys(errors).length > 0) {
+      ErrorSenderToClient(
+        {
+          data: errors,
+          errorData: {
+            errorKey: "",
+            errorMessage: getWordBasedOnCurrLang(
+              language as T_ValidLanguages,
+              "wrongType"
+            ),
+          },
+          expectedType: "string",
+        },
+        ErrorsStatusCode.notAcceptable.standardStatusCode,
+        res
+      );
+      return;
+    }
+
+    const hashPW = await bcrypt.hash(
+      req.body.newPassword,
+      Number(process.env.SALT_ROUNDS)
+    );
+
+    desiredUser.password = hashPW;
+    desiredUser.userToken = "";
+    desiredUser.refreshToken = "";
+    desiredUser.userPasswordResetToken = "";
+
+    await desiredUser.save();
+
+    res.status(DoneStatusCode.done.standardStatusCode).send({
+      message: getWordBasedOnCurrLang(language, "operationSuccess"),
     });
   }
 }

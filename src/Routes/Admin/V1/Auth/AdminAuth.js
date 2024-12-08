@@ -20,17 +20,23 @@ const _auth_classes_1 = require("./_classes/_auth_classes");
 const ErrorsStatusCode_1 = require("../../../../Constants/Errors/ErrorsStatusCode");
 const ErrorSenderToClient_1 = require("../../../../Constants/Errors/ErrorSenderToClient");
 const Languages_1 = require("../../../../Constants/Languages");
-// Constants
-// Services
-const _auth_services_1 = require("./_classes/_auth_services");
-const authMiddleware_1 = require("./Middlewares/authMiddleware");
-const UserModel_1 = require("../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
-const checkIsNull_1 = require("../../../../Validators/checkIsNull");
 const DoneStatusCode_1 = require("../../../../Constants/Done/DoneStatusCode");
 const UnKnownErrorSenderToClient_1 = require("../../../../Constants/Errors/UnKnownErrorSenderToClient");
+// Constants
+// Validators
+const checkIsNull_1 = require("../../../../Validators/checkIsNull");
+// Validators
+// Models
+const UserModel_1 = require("../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
+// Models
 // Services
+const _auth_services_1 = require("./_classes/_auth_services");
+// Services
+// Middlewares
+const authMiddlewareWithoutFullRegisterRequired_1 = require("./Middlewares/authMiddlewareWithoutFullRegisterRequired");
+// Middlewares
 exports.AdminAuth = (0, express_1.Router)();
-exports.AdminAuth.post("/auth-register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.AdminAuth.post("/auth/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const language = req.headers.language;
     try {
         const receivedDataErrors = _auth_classes_1._auth_classes.registerUserDataValidate(req);
@@ -59,7 +65,7 @@ exports.AdminAuth.post("/auth-register", (req, res) => __awaiter(void 0, void 0,
         console.log(err);
     }
 }));
-exports.AdminAuth.post("/auth-login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.AdminAuth.post("/auth/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const language = req.headers.language;
     const receivedDataErrors = _auth_classes_1._auth_classes.registerUserDataValidate(req);
     if (receivedDataErrors.hasError === true) {
@@ -83,11 +89,12 @@ exports.AdminAuth.post("/auth-login", (req, res) => __awaiter(void 0, void 0, vo
         res,
     });
 }));
-exports.AdminAuth.post("/auth-refresh", _auth_classes_1._auth_classes.buildNewToken);
-exports.AdminAuth.post("/auth-resubmit-user-auth", authMiddleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.AdminAuth.post("/auth/refresh-token", _auth_classes_1._auth_classes.buildNewToken);
+exports.AdminAuth.post("/auth/forget-password/step1", _auth_classes_1._auth_classes.forgetPasswordStep1);
+exports.AdminAuth.post("/auth/forget-password/step2", _auth_classes_1._auth_classes.forgetPasswordStep2);
+exports.AdminAuth.post("/auth/resubmit-user-auth", authMiddlewareWithoutFullRegisterRequired_1.authMiddlewareWithoutFullRegisterRequired, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const language = req.headers.language;
     const { body } = req;
-    const keys = Object.keys(body);
     try {
         const desiredUser = yield UserModel_1.AdminUserModel.findOne({
             email: req.userEmail,

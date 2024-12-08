@@ -21,4 +21,5 @@ exports.UserSchema = new mongoose_1.default.Schema({
     blogs: [BlogSchema_1.BlogSchema],
     image: String,
     role: String, // ADMIN | NORMAL_USER
+    userPasswordResetToken: String,
 });

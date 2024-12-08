@@ -30,17 +30,18 @@ const notFoundCurrentUser_1 = require("../../Auth/Middlewares/notFoundCurrentUse
 // Middlewares
 // Models
 const UserModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
+const BlogModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/Blog/BlogModel");
 // Models
 // Constants
 const DoneStatusCode_1 = require("../../../../../Constants/Done/DoneStatusCode");
 const Languages_1 = require("../../../../../Constants/Languages");
 const UnKnownErrorSenderToClient_1 = require("../../../../../Constants/Errors/UnKnownErrorSenderToClient");
+const ErrorSenderToClient_1 = require("../../../../../Constants/Errors/ErrorSenderToClient");
+const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatusCode");
 // Constants
 // Modules
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
-const ErrorSenderToClient_1 = require("../../../../../Constants/Errors/ErrorSenderToClient");
-const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatusCode");
 // Modules
 class GetProfileClasses {
     static getCurrentAdminProfile(req, res) {
@@ -55,10 +56,11 @@ class GetProfileClasses {
                     (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
                     return;
                 }
+                const blogs = yield BlogModel_1.BlogModel.find({ publisherEmail: userEmail });
                 const _a = desiredUser.toJSON(), { password, userToken, refreshToken, _id } = _a, others = __rest(_a, ["password", "userToken", "refreshToken", "_id"]);
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "successful"),
-                    data: others,
+                    data: Object.assign(Object.assign({}, others), { blogs: blogs.map((item) => item.blogId) }),
                 });
             }
             catch (err) {

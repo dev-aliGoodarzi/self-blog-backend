@@ -8,6 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._auth_classes = void 0;
 // Express
@@ -24,6 +27,7 @@ const Languages_1 = require("../../../../../Constants/Languages");
 const checkIsNull_1 = require("../../../../../Validators/checkIsNull");
 const checkIsValidByPattern_1 = require("../../../../../Validators/checkIsValidByPattern");
 // Schemas
+const nodemailer_1 = __importDefault(require("nodemailer"));
 // Services
 const _auth_services_1 = require("./_auth_services");
 const UserModel_1 = require("../../../../../MongodbDataManagement/MongoDB_Models/User/UserModel");
@@ -32,6 +36,7 @@ const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatus
 const notFoundCurrentUser_1 = require("../Middlewares/notFoundCurrentUser");
 const generateNewToken_1 = require("../../../../../Utils/Generators/generateNewToken");
 const DoneStatusCode_1 = require("../../../../../Constants/Done/DoneStatusCode");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 // Services
 class _auth_classes {
     static registerUserDataValidate(req) {
@@ -50,14 +55,14 @@ class _auth_classes {
         }, (_errData, errKey) => {
             errors[errKey] = _errData;
         });
-        (0, checkIsValidByPattern_1.checkIsValidByPattern)(email, formats_1.formats.email, (0, Languages_1.getWordBasedOnCurrLang)(language, "emailFormatError"), "email", (errData, errMessage, errorKey) => {
+        (0, checkIsValidByPattern_1.checkIsValidByPattern)(email, formats_1.formats.email, (0, Languages_1.getWordBasedOnCurrLang)(language, "emailFormatError"), "email", (errData, errorMessage, errorKey) => {
             errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
-                errMessage,
+                errorMessage,
             });
         });
-        (0, checkIsValidByPattern_1.checkIsValidByPattern)(password, formats_1.formats.password, (0, Languages_1.getWordBasedOnCurrLang)(language, "passwordFormatError"), "password", (errData, errMessage, errorKey) => {
+        (0, checkIsValidByPattern_1.checkIsValidByPattern)(password, formats_1.formats.password, (0, Languages_1.getWordBasedOnCurrLang)(language, "passwordFormatError"), "password", (errData, errorMessage, errorKey) => {
             errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
-                errMessage,
+                errorMessage,
             });
         });
         if (Object.keys(errors).length > 0) {
@@ -129,14 +134,20 @@ class _auth_classes {
             const language = req.headers.language;
             const errors = {};
             (0, checkIsNull_1.checkIsNull)(refreshToken, "string", {
-                errorKey: "email",
+                errorKey: "refreshToken",
                 errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
             }, (_errData, errKey) => {
                 errors[errKey] = _errData;
             });
+            if (String(refreshToken).length < 10) {
+                errors["auth-refresh"] = {
+                    errorKey: "NOT_ACCEPTABLE_REFRESH-TOKEN",
+                    errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "lengthIsLittleThanDesire"),
+                };
+            }
             if (Object.keys(errors).length > 0) {
                 (0, ErrorSenderToClient_1.ErrorSenderToClient)({
-                    data: {},
+                    data: errors,
                     errorData: {
                         errorKey: "",
                         errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
@@ -164,6 +175,115 @@ class _auth_classes {
             res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).send({
                 message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
                 data: { userToken: newAccessToken, refreshToken: newRefreshToken },
+            });
+        });
+    }
+    static forgetPasswordStep1(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const language = req.headers.language;
+            const errors = {};
+            (0, checkIsValidByPattern_1.checkIsValidByPattern)(req.body.email, formats_1.formats.email, (0, Languages_1.getWordBasedOnCurrLang)(language, "emailFormatError"), "email", (errData, errorMessage, errorKey) => {
+                errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
+                    errorMessage,
+                });
+            });
+            if (Object.keys(errors).length > 0) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: errors,
+                    errorData: {
+                        errorKey: "",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                    },
+                    expectedType: "string",
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
+            try {
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: req.body.email,
+                });
+                if (desiredUser) {
+                    const refreshPasswordToken = (0, generateNewToken_1.generateNewToken)({
+                        email: desiredUser.email,
+                        id: desiredUser.userId,
+                    }, "1h");
+                    desiredUser.userPasswordResetToken = refreshPasswordToken;
+                    yield desiredUser.save();
+                    const transporter = nodemailer_1.default.createTransport({
+                        host: "plesk.parsrad.com",
+                        port: 465, // Use port 25 for SMTP
+                        secure: true, // No SSL/TLS as per your setup
+                        auth: {
+                            user: "cccssss@my-template.ir",
+                            pass: "0Gx9$q41w",
+                        },
+                    });
+                    transporter.sendMail({
+                        from: '"BlogAdmin" Email_Master',
+                        to: desiredUser.email,
+                        subject: "Test Email",
+                        text: "Hello world?",
+                        html: "<b>Hello world?</b>",
+                    }, (error, info) => {
+                        if (error) {
+                            return console.log(error);
+                        }
+                        console.log("Message sent: %s", JSON.stringify(info));
+                    });
+                }
+            }
+            catch (err) {
+                console.log(err);
+            }
+            finally {
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "resetPasswordEmailSend"),
+                });
+            }
+        });
+    }
+    static forgetPasswordStep2(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const language = req.headers.language;
+            const errors = {};
+            const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                userPasswordResetToken: req.headers["password-forget-token"],
+            });
+            if (!desiredUser) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: errors,
+                    errorData: {
+                        errorKey: "",
+                        errorMessage: `${(0, Languages_1.getWordBasedOnCurrLang)(language, "notExistedUser")} || ${(0, Languages_1.getWordBasedOnCurrLang)(language, "expiredToken")}`,
+                    },
+                    expectedType: "string",
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
+            (0, checkIsValidByPattern_1.checkIsValidByPattern)(req.body.newPassword, formats_1.formats.password, (0, Languages_1.getWordBasedOnCurrLang)(language, "passwordFormatError"), "newPassword", (errData, errorMessage, errorKey) => {
+                errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
+                    errorMessage,
+                });
+            });
+            if (Object.keys(errors).length > 0) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: errors,
+                    errorData: {
+                        errorKey: "",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                    },
+                    expectedType: "string",
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
+            const hashPW = yield bcrypt_1.default.hash(req.body.newPassword, Number(process.env.SALT_ROUNDS));
+            desiredUser.password = hashPW;
+            desiredUser.userToken = "";
+            desiredUser.refreshToken = "";
+            desiredUser.userPasswordResetToken = "";
+            yield desiredUser.save();
+            res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).send({
+                message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
             });
         });
     }

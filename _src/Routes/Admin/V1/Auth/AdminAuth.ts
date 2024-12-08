@@ -11,20 +11,29 @@ import { ErrorsStatusCode } from "../../../../Constants/Errors/ErrorsStatusCode"
 import { ErrorSenderToClient } from "../../../../Constants/Errors/ErrorSenderToClient";
 import { getWordBasedOnCurrLang } from "../../../../Constants/Languages";
 import { T_ValidLanguages } from "../../../../Constants/Languages/languageTypes";
+import { DoneStatusCode } from "../../../../Constants/Done/DoneStatusCode";
+import { UnKnownErrorSenderToClient } from "../../../../Constants/Errors/UnKnownErrorSenderToClient";
 // Constants
+
+// Validators
+import { checkIsNull, T_ErrorData } from "../../../../Validators/checkIsNull";
+// Validators
+
+// Models
+import { AdminUserModel } from "../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
+// Models
 
 // Services
 import { _auth_services } from "./_classes/_auth_services";
-import { authMiddleware } from "./Middlewares/authMiddleware";
-import { AdminUserModel } from "../../../../MongodbDataManagement/MongoDB_Models/User/UserModel";
-import { checkIsNull, T_ErrorData } from "../../../../Validators/checkIsNull";
-import { DoneStatusCode } from "../../../../Constants/Done/DoneStatusCode";
-import { UnKnownErrorSenderToClient } from "../../../../Constants/Errors/UnKnownErrorSenderToClient";
 // Services
+
+// Middlewares
+import { authMiddlewareWithoutFullRegisterRequired } from "./Middlewares/authMiddlewareWithoutFullRegisterRequired";
+// Middlewares
 
 export const AdminAuth = Router();
 
-AdminAuth.post("/auth-register", async (req, res) => {
+AdminAuth.post("/auth/register", async (req, res) => {
   const language = req.headers.language as T_ValidLanguages;
   try {
     const receivedDataErrors = _auth_classes.registerUserDataValidate(req);
@@ -64,7 +73,7 @@ AdminAuth.post("/auth-register", async (req, res) => {
   }
 });
 
-AdminAuth.post("/auth-login", async (req, res) => {
+AdminAuth.post("/auth/login", async (req, res) => {
   const language = req.headers.language as T_ValidLanguages;
 
   const receivedDataErrors = _auth_classes.registerUserDataValidate(req);
@@ -103,65 +112,40 @@ AdminAuth.post("/auth-login", async (req, res) => {
   });
 });
 
-AdminAuth.post("/auth-refresh", _auth_classes.buildNewToken);
+AdminAuth.post("/auth/refresh-token", _auth_classes.buildNewToken);
 
-AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
-  const language = req.headers.language as T_ValidLanguages;
+AdminAuth.post(
+  "/auth/forget-password/step1",
+  _auth_classes.forgetPasswordStep1
+);
+AdminAuth.post(
+  "/auth/forget-password/step2",
+  _auth_classes.forgetPasswordStep2
+);
 
-  const { body } = req;
+AdminAuth.post(
+  "/auth/resubmit-user-auth",
+  authMiddlewareWithoutFullRegisterRequired,
+  async (req, res) => {
+    const language = req.headers.language as T_ValidLanguages;
 
-  const keys = Object.keys(body);
+    const { body } = req;
 
-  try {
-    const desiredUser = await AdminUserModel.findOne({
-      email: req.userEmail,
-    });
-
-    if (desiredUser!.isRegisterCompleted) {
-      ErrorSenderToClient(
-        {
-          data: {},
-          errorData: {
-            errorKey: "",
-            errorMessage: getWordBasedOnCurrLang(
-              language as T_ValidLanguages,
-              "alreadyDone"
-            ),
-          },
-          expectedType: "string",
-        },
-        ErrorsStatusCode.notAcceptable.standardStatusCode,
-        res
-      );
-      return;
-    } else {
-      const errors: { [key: string]: T_ErrorData } = {};
-
-      const desiredKeys = ["name", "lastName"];
-
-      desiredKeys.forEach((item) => {
-        const body = req.body;
-
-        checkIsNull(
-          body[item],
-          "string",
-          {
-            errorKey: item,
-            errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
-          },
-          (_errData, errKey) => {
-            (errors as any)[errKey] = _errData;
-          }
-        );
+    try {
+      const desiredUser = await AdminUserModel.findOne({
+        email: req.userEmail,
       });
 
-      if (Object.keys(errors).length > 0) {
+      if (desiredUser!.isRegisterCompleted) {
         ErrorSenderToClient(
           {
-            data: errors,
+            data: {},
             errorData: {
               errorKey: "",
-              errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+              errorMessage: getWordBasedOnCurrLang(
+                language as T_ValidLanguages,
+                "alreadyDone"
+              ),
             },
             expectedType: "string",
           },
@@ -169,19 +153,55 @@ AdminAuth.post("/auth-resubmit-user-auth", authMiddleware, async (req, res) => {
           res
         );
         return;
+      } else {
+        const errors: { [key: string]: T_ErrorData } = {};
+
+        const desiredKeys = ["name", "lastName"];
+
+        desiredKeys.forEach((item) => {
+          const body = req.body;
+
+          checkIsNull(
+            body[item],
+            "string",
+            {
+              errorKey: item,
+              errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+            },
+            (_errData, errKey) => {
+              (errors as any)[errKey] = _errData;
+            }
+          );
+        });
+
+        if (Object.keys(errors).length > 0) {
+          ErrorSenderToClient(
+            {
+              data: errors,
+              errorData: {
+                errorKey: "",
+                errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+              },
+              expectedType: "string",
+            },
+            ErrorsStatusCode.notAcceptable.standardStatusCode,
+            res
+          );
+          return;
+        }
+
+        desiredUser!.name = body["name"];
+        desiredUser!.lastName = body["lastName"];
+        desiredUser!.isRegisterCompleted = true;
+
+        await desiredUser!.save();
+
+        res.status(DoneStatusCode.done.standardStatusCode).json({
+          message: getWordBasedOnCurrLang(language, "userAuthCompleted"),
+        });
       }
-
-      desiredUser!.name = body["name"];
-      desiredUser!.lastName = body["lastName"];
-      desiredUser!.isRegisterCompleted = true;
-
-      await desiredUser!.save();
-
-      res.status(DoneStatusCode.done.standardStatusCode).json({
-        message: getWordBasedOnCurrLang(language, "userAuthCompleted"),
-      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
     }
-  } catch (err) {
-    UnKnownErrorSenderToClient({ req, res }, err);
   }
-});
+);

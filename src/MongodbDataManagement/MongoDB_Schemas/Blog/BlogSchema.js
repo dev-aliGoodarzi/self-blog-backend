@@ -8,7 +8,11 @@ const mongoose_1 = __importDefault(require("mongoose"));
 exports.BlogSchema = new mongoose_1.default.Schema({
     title: String,
     innerHTML: String,
-    rating: Number,
+    rating: [Number],
+    isPublished: Boolean,
+    publisherEmail: String,
+    blogId: String,
+    tags: [String],
     comments: [
         {
             commentTitle: String,

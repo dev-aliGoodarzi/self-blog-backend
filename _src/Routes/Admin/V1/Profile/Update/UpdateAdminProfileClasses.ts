@@ -34,6 +34,7 @@ import { formats } from "../../../../../Formats/formats";
 // Utils
 import { addDataToExistingObject } from "../../../../../Utils/DataAdder/addDataToExistingObject";
 import { notFoundCurrentUser } from "../../Auth/Middlewares/notFoundCurrentUser";
+import { BlogModel } from "../../../../../MongodbDataManagement/MongoDB_Models/Blog/BlogModel";
 // Utils
 
 export class UpdateAdminProfileClasses {
@@ -115,9 +116,9 @@ export class UpdateAdminProfileClasses {
         formats.email,
         getWordBasedOnCurrLang(language, "emailFormatError"),
         "email",
-        (errData, errMessage, errorKey) => {
+        (errData, errorMessage, errorKey) => {
           errors[errorKey] = addDataToExistingObject(errors[errorKey], {
-            errMessage,
+            errorMessage,
           });
         }
       );
@@ -181,6 +182,13 @@ export class UpdateAdminProfileClasses {
       }
 
       desiredUser.email = req.body["email"];
+
+      await BlogModel.findOneAndUpdate(
+        { publisherEmail: userEmail },
+        {
+          publisherEmail: req.body["email"],
+        }
+      );
 
       await desiredUser.save();
 
