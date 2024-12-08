@@ -94,7 +94,7 @@ app.use(
   express.static(path.join(__dirname, "../Swagger/CSS"))
 );
 app.use(
-  "/documentation/swagger-uix",
+  "/documentation/swagger-ui",
   swaggerUi.serve,
   swaggerUi.setup(require("./../Swagger/SwaggerJson.json"), {
     explorer: true,
