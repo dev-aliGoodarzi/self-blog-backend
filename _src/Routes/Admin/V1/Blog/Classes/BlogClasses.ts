@@ -322,4 +322,19 @@ export class BlogClasses {
       UnKnownErrorSenderToClient({ req, res }, err);
     }
   }
+
+  static async getTags(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const allTags = await TagModel.find({});
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        tags: allTags,
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
 }

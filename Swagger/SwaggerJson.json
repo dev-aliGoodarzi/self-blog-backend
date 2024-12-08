@@ -624,7 +624,47 @@
         "tags": ["Blog Management"]
       }
     },
-    "// BLOG_END": {}
+    "// BLOG_END": {},
+    "// Tags_Start": {},
+    "/admin/v1/blog/tags": {
+      "get": {
+        "summary": "Get All Available Tags",
+        "operationId": "Get All Tags",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "all available tags will store here",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "successful"
+                },
+                "tags": {
+                  "type": "array",
+                  "example": "[]"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Tags"]
+      }
+    },
+    "// Tags_End": {}
   },
   "definitions": {
     "loginPostData": {

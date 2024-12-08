@@ -243,5 +243,20 @@ class BlogClasses {
             }
         });
     }
+    static getTags(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const allTags = yield TagModel_1.TagModel.find({});
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    tags: allTags,
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
 }
 exports.BlogClasses = BlogClasses;
