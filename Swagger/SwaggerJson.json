@@ -624,8 +624,6 @@
         "tags": ["Blog Management"]
       }
     },
-    "// BLOG_END": {},
-    "// Tags_Start": {},
     "/admin/v1/blog/tags": {
       "get": {
         "summary": "Get All Available Tags For Use In Blog CRUD",
@@ -661,10 +659,10 @@
             }
           }
         },
-        "tags": ["Tag Management"]
+        "tags": ["Blog Management"]
       }
     },
-    "// Tags_End": {}
+    "// BLOG_END": {}
   },
   "definitions": {
     "loginPostData": {
