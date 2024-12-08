@@ -628,7 +628,7 @@
     "// Tags_Start": {},
     "/admin/v1/blog/tags": {
       "get": {
-        "summary": "Get All Available Tags",
+        "summary": "Get All Available Tags For Use In Blog CRUD",
         "operationId": "Get All Tags",
         "security": [
           {
