@@ -248,6 +248,13 @@ class BlogClasses {
             try {
                 const language = req.headers.language;
                 const allTags = yield TagModel_1.TagModel.find({});
+                if (allTags.length < 5) {
+                    const newTag = new TagModel_1.TagModel({
+                        title: `RandomTitle : ${(0, RandomCharGenByLength_1.RandomCharGenByLength)(5)}`,
+                        value: (0, RandomCharGenByLength_1.RandomCharGenByLength)(10),
+                    });
+                    yield newTag.save();
+                }
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
                     tags: allTags,

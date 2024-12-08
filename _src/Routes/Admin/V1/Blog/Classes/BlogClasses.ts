@@ -329,6 +329,15 @@ export class BlogClasses {
 
       const allTags = await TagModel.find({});
 
+      if (allTags.length < 5) {
+        const newTag = new TagModel({
+          title: `RandomTitle : ${RandomCharGenByLength(5)}`,
+          value: RandomCharGenByLength(10),
+        });
+
+        await newTag.save();
+      }
+
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
         tags: allTags,
