@@ -69,6 +69,12 @@ app.get("/", (_, res) => {
         message: "Server Works Normally ",
     });
 });
+app.use((req, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+});
 /*
  *
  *
@@ -82,7 +88,12 @@ app.get("/", (_, res) => {
  */
 // #region API DOCUMANTS
 app.use("/swagger-static-files", express_1.default.static(path_1.default.join(__dirname, "../Swagger/CSS")));
-app.use("/documentation/swagger-ui", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(require("./../Swagger/SwaggerJson.json"), {
+app.use("/documentation/swagger-ui", (req, res, next) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+}, swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(require("./../Swagger/SwaggerJson.json"), {
     explorer: true,
     customJs: "/swagger-static-files/custom-js.js",
 }));
