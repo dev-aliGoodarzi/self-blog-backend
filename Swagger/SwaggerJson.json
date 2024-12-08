@@ -5,8 +5,6 @@
     "version": "1.0.0"
   },
   "schemes": ["http", "https"],
-  "servers": ["localhost:8000", " api.self-blog.ir"],
-  "basePath": "",
   "consumes": ["application/json"],
   "produces": ["application/json"],
   "paths": {
