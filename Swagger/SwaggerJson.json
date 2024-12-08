@@ -8,7 +8,6 @@
   "consumes": ["application/json"],
   "produces": ["application/json"],
   "paths": {
-    "// COMMENT_AUTH_START": {},
     "/admin/v1/auth/login": {
       "post": {
         "summary": "POST Admin Data (Email & Password) for Login",
@@ -247,8 +246,6 @@
         "tags": ["Authentication"]
       }
     },
-    "// COMMENT_AUTH_END": {},
-    "// PROFILE_START": {},
     "/admin/v1/profile": {
       "get": {
         "summary": "Get Current User Profile - Based On Sending Token",
@@ -446,8 +443,6 @@
         "tags": ["Profile"]
       }
     },
-    "// PROFILE_END": {},
-    "// BLOG_START": {},
     "/admin/v1/blog/add-new": {
       "post": {
         "summary": "Add New Blog Item => Automatic Removes <script> tags ;)",
@@ -659,8 +654,7 @@
         },
         "tags": ["Blog Management"]
       }
-    },
-    "// BLOG_END": {}
+    }
   },
   "definitions": {
     "loginPostData": {
