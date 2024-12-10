@@ -21,9 +21,10 @@ import path from "path";
 // Modules
 
 import swaggerUi from "swagger-ui-express";
-
+import cors from "cors";
 // #region #init
 const app = express();
+app.use(cors({ origin: "*" }));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(

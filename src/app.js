@@ -19,8 +19,10 @@ require("dotenv").config();
 const path_1 = __importDefault(require("path"));
 // Modules
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const cors_1 = __importDefault(require("cors"));
 // #region #init
 const app = (0, express_1.default)();
+app.use((0, cors_1.default)({ origin: "*" }));
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");

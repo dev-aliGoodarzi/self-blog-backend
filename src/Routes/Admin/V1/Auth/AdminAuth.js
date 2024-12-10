@@ -41,7 +41,14 @@ exports.AdminAuth.post("/auth/register", (req, res) => __awaiter(void 0, void 0,
     try {
         const receivedDataErrors = _auth_classes_1._auth_classes.registerUserDataValidate(req);
         if (receivedDataErrors.hasError === true) {
-            (0, ErrorSenderToClient_1.ErrorSenderToClient)(receivedDataErrors.errorData, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+            (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                data: receivedDataErrors.errorData,
+                errorData: {
+                    errorKey: "UNACCEPTABLE_DATA",
+                    errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                },
+                expectedType: "string",
+            }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
             return;
         }
         const canRegisterCurrentEmailAndPassword = yield _auth_classes_1._auth_classes.canRegisterCurrentEmailAndPassword(req);
@@ -69,7 +76,14 @@ exports.AdminAuth.post("/auth/login", (req, res) => __awaiter(void 0, void 0, vo
     const language = req.headers.language;
     const receivedDataErrors = _auth_classes_1._auth_classes.registerUserDataValidate(req);
     if (receivedDataErrors.hasError === true) {
-        (0, ErrorSenderToClient_1.ErrorSenderToClient)(receivedDataErrors.errorData, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+        (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+            data: receivedDataErrors.errorData,
+            errorData: {
+                errorKey: "UNACCEPTABLE_DATA",
+                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+            },
+            expectedType: "string",
+        }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
         return;
     }
     const canLoginCurrentEmailAndPassword = yield _auth_classes_1._auth_classes.canLoginCurrentEmailAndPassword(req);

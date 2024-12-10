@@ -45,7 +45,7 @@ const authMiddlewareWithoutFullRegisterRequired = (req, res, next) => __awaiter(
             expectedType: "string",
             errorData: {
                 errorKey: "NOT_FOUND_TOKEN",
-                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "lengthIsLittleThanDesire"),
+                errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "noToken"),
             },
         }, ErrorsStatusCode_1.ErrorsStatusCode.notAuthorized.standardStatusCode, res);
         return;

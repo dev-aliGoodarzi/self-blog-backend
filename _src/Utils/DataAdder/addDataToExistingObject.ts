@@ -6,7 +6,6 @@ export const addDataToExistingObject = <T>(
 ): T => {
   return {
     ...data,
-    errorData: extraData,
     extraData,
   };
 };

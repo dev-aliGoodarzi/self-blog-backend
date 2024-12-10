@@ -107,7 +107,6 @@ class _auth_classes {
             const currentUser = yield UserModel_1.AdminUserModel.findOne({
                 email: userEmail,
             });
-            console.log("userNotExistx");
             if (!currentUser)
                 return "userNotExist";
             if (currentUser.isRegisterCompleted) {
@@ -174,7 +173,7 @@ class _auth_classes {
             yield desiredUser.save();
             res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).send({
                 message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
-                data: { userToken: newAccessToken, refreshToken: newRefreshToken },
+                data: { accessToken: newAccessToken, refreshToken: newRefreshToken },
             });
         });
     }

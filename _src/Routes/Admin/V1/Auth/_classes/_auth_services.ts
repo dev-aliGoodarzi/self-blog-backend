@@ -98,7 +98,7 @@ export class _auth_services {
     const language = pipeData.req.headers.language as T_ValidLanguages;
 
     const selectedAdmin = await AdminUserModel.findOne({
-      email,
+      email: email.toLowerCase(),
     });
 
     if (!selectedAdmin) {

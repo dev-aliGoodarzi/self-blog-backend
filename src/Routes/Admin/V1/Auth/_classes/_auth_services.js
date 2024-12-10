@@ -84,7 +84,7 @@ class _auth_services {
             const { email, password } = pipeData.req.body;
             const language = pipeData.req.headers.language;
             const selectedAdmin = yield UserModel_1.AdminUserModel.findOne({
-                email,
+                email: email.toLowerCase(),
             });
             if (!selectedAdmin) {
                 (0, ErrorSenderToClient_1.ErrorSenderToClient)({

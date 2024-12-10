@@ -16,6 +16,7 @@ import { UpdateAdminProfileClasses } from "./Update/UpdateAdminProfileClasses";
 
 // Multer
 import multer from "multer";
+import { authMiddlewareWithoutFullRegisterRequired } from "../Auth/Middlewares/authMiddlewareWithoutFullRegisterRequired";
 // Multer
 
 export const AdminProfileRoutes = Router();
@@ -33,7 +34,7 @@ const upload = multer({
 
 AdminProfileRoutes.get(
   "/profile",
-  authMiddleware,
+  authMiddlewareWithoutFullRegisterRequired,
   GetProfileClasses.getCurrentAdminProfile
 );
 
@@ -60,4 +61,10 @@ AdminProfileRoutes.put(
   authMiddleware,
   upload.single("avatar"),
   UpdateAdminProfileClasses.updateAdminUserProfileImage
+);
+
+AdminProfileRoutes.get(
+  "/profile/blogs",
+  authMiddleware,
+  GetProfileClasses.getAllBlogsWithPagination
 );

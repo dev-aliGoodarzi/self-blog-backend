@@ -39,7 +39,14 @@ AdminAuth.post("/auth/register", async (req, res) => {
     const receivedDataErrors = _auth_classes.registerUserDataValidate(req);
     if (receivedDataErrors.hasError === true) {
       ErrorSenderToClient(
-        receivedDataErrors.errorData as any,
+        {
+          data: receivedDataErrors.errorData,
+          errorData: {
+            errorKey: "UNACCEPTABLE_DATA",
+            errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+          },
+          expectedType: "string",
+        },
         ErrorsStatusCode.notAcceptable.standardStatusCode,
         res
       );
@@ -79,7 +86,14 @@ AdminAuth.post("/auth/login", async (req, res) => {
   const receivedDataErrors = _auth_classes.registerUserDataValidate(req);
   if (receivedDataErrors.hasError === true) {
     ErrorSenderToClient(
-      receivedDataErrors.errorData as any,
+      {
+        data: receivedDataErrors.errorData,
+        errorData: {
+          errorKey: "UNACCEPTABLE_DATA",
+          errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+        },
+        expectedType: "string",
+      },
       ErrorsStatusCode.notAcceptable.standardStatusCode,
       res
     );

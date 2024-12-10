@@ -18,6 +18,7 @@ const UpdateAdminProfileClasses_1 = require("./Update/UpdateAdminProfileClasses"
 // Update Handlers
 // Multer
 const multer_1 = __importDefault(require("multer"));
+const authMiddlewareWithoutFullRegisterRequired_1 = require("../Auth/Middlewares/authMiddlewareWithoutFullRegisterRequired");
 // Multer
 exports.AdminProfileRoutes = (0, express_1.Router)();
 const upload = (0, multer_1.default)({
@@ -31,8 +32,9 @@ const upload = (0, multer_1.default)({
         }
     },
 });
-exports.AdminProfileRoutes.get("/profile", authMiddleware_1.authMiddleware, GetAdminProfileClasses_1.GetProfileClasses.getCurrentAdminProfile);
+exports.AdminProfileRoutes.get("/profile", authMiddlewareWithoutFullRegisterRequired_1.authMiddlewareWithoutFullRegisterRequired, GetAdminProfileClasses_1.GetProfileClasses.getCurrentAdminProfile);
 exports.AdminProfileRoutes.get("/profile/avatar", authMiddleware_1.authMiddleware, GetAdminProfileClasses_1.GetProfileClasses.getAdminAvatar);
 exports.AdminProfileRoutes.put("/profile/edit/basic", authMiddleware_1.authMiddleware, UpdateAdminProfileClasses_1.UpdateAdminProfileClasses.updateBasicAdminProfileData);
 exports.AdminProfileRoutes.patch("/profile/edit/basic/email", authMiddleware_1.authMiddleware, UpdateAdminProfileClasses_1.UpdateAdminProfileClasses.updateBasicAdminProfileEmail);
 exports.AdminProfileRoutes.put("/profile/edit/extra/image", authMiddleware_1.authMiddleware, upload.single("avatar"), UpdateAdminProfileClasses_1.UpdateAdminProfileClasses.updateAdminUserProfileImage);
+exports.AdminProfileRoutes.get("/profile/blogs", authMiddleware_1.authMiddleware, GetAdminProfileClasses_1.GetProfileClasses.getAllBlogsWithPagination);

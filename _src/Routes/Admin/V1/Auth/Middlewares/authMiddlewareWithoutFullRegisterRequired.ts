@@ -53,7 +53,7 @@ export const authMiddlewareWithoutFullRegisterRequired = async (
           errorKey: "NOT_FOUND_TOKEN",
           errorMessage: getWordBasedOnCurrLang(
             language as T_ValidLanguages,
-            "lengthIsLittleThanDesire"
+            "noToken"
           ),
         },
       },

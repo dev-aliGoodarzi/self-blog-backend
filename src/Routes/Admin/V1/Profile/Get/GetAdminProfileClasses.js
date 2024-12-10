@@ -104,5 +104,40 @@ class GetProfileClasses {
             }
         });
     }
+    static getAllBlogsWithPagination(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const { userEmail } = req;
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
+                const { page = 1, size = 5 } = req.query;
+                const pageInt = parseInt(page, 10);
+                const sizeInt = parseInt(size, 10);
+                const blogs = yield BlogModel_1.BlogModel.find({ publisherEmail: userEmail })
+                    .skip((pageInt - 1) * sizeInt)
+                    .limit(sizeInt)
+                    .exec();
+                const count = yield BlogModel_1.BlogModel.countDocuments();
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "successful"),
+                    data: {
+                        blogs,
+                        count,
+                        page,
+                        size,
+                    },
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
 }
 exports.GetProfileClasses = GetProfileClasses;

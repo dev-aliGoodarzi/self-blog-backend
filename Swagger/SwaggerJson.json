@@ -443,6 +443,55 @@
         "tags": ["Profile"]
       }
     },
+    "/admin/v1/profile/blogs": {
+      "get": {
+        "summary": "Get All Blogs With Pagination",
+        "operationId": "Get_Admin_Profile_Blogs",
+        "security": [
+          {
+            "SimpleAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "language",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get Blogs By Pagination",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "type": "string"
+                },
+                "schema": {
+                  "$ref": "#/definitions/paginationReceivedBlogs"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Profile"]
+      }
+    },
+
     "/admin/v1/blog/add-new": {
       "post": {
         "summary": "Add New Blog Item => Automatic Removes <script> tags ;)",
@@ -848,6 +897,41 @@
         "tags": {
           "type": "string",
           "example": "tags => send it as array"
+        }
+      }
+    },
+    "paginationReceivedBlogs": {
+      "type": "object",
+      "properties": {
+        "blogs": {
+          "type": "object",
+          "example": {
+            "title": "string",
+            "innerHTML": "string ",
+            "rating": "1",
+            "isPublished": false,
+            "publisherEmail": "string",
+            "blogId": "string",
+            "tags": "string[]",
+            "comments": {
+              "commentTitle": "string",
+              "commentBody": "string",
+              "writerId": "string",
+              "isPublished": "boolean"
+            }
+          }
+        },
+        "count": {
+          "type": "number",
+          "example": "1"
+        },
+        "page": {
+          "type": "number",
+          "example": "1"
+        },
+        "size": {
+          "type": "string",
+          "example": "5"
         }
       }
     }

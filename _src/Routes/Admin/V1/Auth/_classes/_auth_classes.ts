@@ -147,7 +147,6 @@ export class _auth_classes {
       email: userEmail,
     })!;
 
-    console.log("userNotExistx");
     if (!currentUser) return "userNotExist";
 
     if (currentUser.isRegisterCompleted) {
@@ -252,7 +251,7 @@ export class _auth_classes {
 
     res.status(DoneStatusCode.done.standardStatusCode).send({
       message: getWordBasedOnCurrLang(language, "operationSuccess"),
-      data: { userToken: newAccessToken, refreshToken: newRefreshToken },
+      data: { accessToken: newAccessToken, refreshToken: newRefreshToken },
     });
   }
 
