@@ -7,6 +7,10 @@ export type T_BlogComments = {
   isPublished: boolean;
 };
 
+export type T_BlogLikes = {
+  userId: string;
+};
+
 export type T_BlogSchema = {
   title: string;
   innerHTML: string;
@@ -16,6 +20,7 @@ export type T_BlogSchema = {
   blogId: string;
   tags: string[];
   comments: T_BlogComments[];
+  likes: T_BlogLikes[];
 };
 
 export const BlogSchema = new mongoose.Schema<T_BlogSchema>({
@@ -26,6 +31,11 @@ export const BlogSchema = new mongoose.Schema<T_BlogSchema>({
   publisherEmail: String,
   blogId: String,
   tags: [String],
+  likes: [
+    {
+      userId: String,
+    },
+  ],
   comments: [
     {
       commentTitle: String,

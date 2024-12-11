@@ -33,3 +33,9 @@ BlogRoutes.get(
 );
 
 BlogRoutes.get("/blog/tags", authMiddleware, BlogClasses.getTags);
+
+BlogRoutes.get(
+  "/blog/blogs",
+  authMiddleware,
+  BlogClasses.getAllBlogsWithPagination
+);

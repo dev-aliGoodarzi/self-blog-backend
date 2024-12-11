@@ -37,4 +37,3 @@ exports.AdminProfileRoutes.get("/profile/avatar", authMiddleware_1.authMiddlewar
 exports.AdminProfileRoutes.put("/profile/edit/basic", authMiddleware_1.authMiddleware, UpdateAdminProfileClasses_1.UpdateAdminProfileClasses.updateBasicAdminProfileData);
 exports.AdminProfileRoutes.patch("/profile/edit/basic/email", authMiddleware_1.authMiddleware, UpdateAdminProfileClasses_1.UpdateAdminProfileClasses.updateBasicAdminProfileEmail);
 exports.AdminProfileRoutes.put("/profile/edit/extra/image", authMiddleware_1.authMiddleware, upload.single("avatar"), UpdateAdminProfileClasses_1.UpdateAdminProfileClasses.updateAdminUserProfileImage);
-exports.AdminProfileRoutes.get("/profile/blogs", authMiddleware_1.authMiddleware, GetAdminProfileClasses_1.GetProfileClasses.getAllBlogsWithPagination);

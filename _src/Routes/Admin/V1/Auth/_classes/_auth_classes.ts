@@ -233,7 +233,7 @@ export class _auth_classes {
         email: desiredUser.email as string,
         id: desiredUser.userId as string,
       },
-      "1h"
+      String(process.env.TOKEN_EXPIRE_TIME as string)
     );
 
     const newRefreshToken = generateNewToken(
@@ -241,7 +241,7 @@ export class _auth_classes {
         email: desiredUser.email as string,
         id: desiredUser.userId as string,
       },
-      "2d"
+      String(process.env.REFRESH_TOKEN_EXPIRE_TIME as string)
     );
 
     desiredUser.userToken = newAccessToken;

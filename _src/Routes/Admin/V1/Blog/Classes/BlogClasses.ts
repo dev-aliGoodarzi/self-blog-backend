@@ -25,6 +25,12 @@ import { formats } from "../../../../../Formats/formats";
 import { RandomCharGenByLength } from "../../../../../Generators/CharGen/RandomCharGenByLength";
 import { TagModel } from "../../../../../MongodbDataManagement/MongoDB_Models/Tags/TagModel";
 import { DoneStatusCode } from "../../../../../Constants/Done/DoneStatusCode";
+import { calculateAverage } from "../../../../../Utils/Calculators/CalculateAvg";
+import { DataPickerBasedOnArgs } from "../../../../../Utils/Pickers/DataPickerBasedOnArgs";
+import { DataPickerInObjectBasedOnArgs } from "../../../../../Utils/Pickers/DataPickerInObjectBasedOnArgs";
+import { DataPickerBasedOnArgsForArray } from "../../../../../Utils/Pickers/DataPickerBasedOnArgsForArray";
+import { ReturnCurrentValueIfIncluded } from "../../../../../Utils/Returner/ReturnCurrentValueIfIncluded";
+import { ValidTypes } from "../../../../../Constants/ValidTypes/ValidTypes";
 // Middlewares
 
 export class BlogClasses {
@@ -111,6 +117,7 @@ export class BlogClasses {
         publisherEmail: desiredUser.email,
         tags: blogTags,
         blogId: `blg_${Date.now()}_${RandomCharGenByLength(32)}`,
+        likes: [],
       });
 
       await newBlogData.validate();
@@ -341,6 +348,115 @@ export class BlogClasses {
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
         tags: allTags,
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
+
+  static async getAllBlogsWithPagination(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const { userEmail } = req;
+
+      const tags = await TagModel.find({});
+
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
+
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      const { page = 1, size = 5 } = req.query;
+      const pageInt = parseInt(page as string, 10) || 1;
+      const sizeInt = parseInt(size as string, 10) || 1;
+
+      const sortType = ReturnCurrentValueIfIncluded(
+        req.query.sortType as string,
+        ValidTypes.sortTypes,
+        ""
+      );
+
+      const blogSortBy = ReturnCurrentValueIfIncluded(
+        req.query.blogSortBy as string,
+        ValidTypes.blogSortType,
+        ""
+      );
+
+      const blogs = await BlogModel.find({ publisherEmail: userEmail })
+        .skip((pageInt - 1) * sizeInt)
+        .limit(sizeInt)
+        .exec();
+
+      const count = await BlogModel.countDocuments();
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "successful"),
+        data: {
+          blogs: (() => {
+            const desiredBlog = blogs.map((item) => {
+              const { innerHTML, ...others } = item.toJSON();
+              const data = {
+                rating: calculateAverage(others.rating),
+                likes: others.likes.length,
+                tags: DataPickerBasedOnArgsForArray(
+                  DataPickerBasedOnArgs(item.tags, tags),
+                  ["title", "value"]
+                ),
+              };
+              return { ...others, ...data };
+            });
+
+            if (blogSortBy === "rating") {
+              if (sortType === "ascending") {
+                return desiredBlog.sort((a, b) => a.rating - b.rating);
+              }
+              if (sortType === "descending") {
+                return desiredBlog.sort((a, b) => b.rating - a.rating);
+              }
+              return desiredBlog.sort((a, b) => a.rating);
+            }
+
+            if (blogSortBy === "published") {
+              if (sortType === "ascending") {
+                return desiredBlog.sort((a, b) =>
+                  a.isPublished === b.isPublished ? 0 : a.isPublished ? -1 : 1
+                );
+              }
+              if (sortType === "descending") {
+                return desiredBlog
+                  .sort((a, b) =>
+                    a.isPublished === b.isPublished ? 1 : b.isPublished ? -1 : 1
+                  )
+                  .reverse();
+              }
+              return desiredBlog.sort((a, b) =>
+                a.isPublished === b.isPublished ? 0 : a.isPublished ? -1 : 1
+              );
+            }
+
+            if (blogSortBy === "likes") {
+              if (sortType === "ascending") {
+                return desiredBlog.sort((a, b) => a.likes - b.likes);
+              }
+              if (sortType === "descending") {
+                return desiredBlog.sort((a, b) => b.likes - a.likes);
+              }
+              return desiredBlog.sort((a, b) => a.likes);
+            }
+
+            return desiredBlog;
+          })(),
+
+          count,
+          page: pageInt,
+          size: sizeInt,
+          maxPages: Math.ceil(count / sizeInt),
+        },
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);

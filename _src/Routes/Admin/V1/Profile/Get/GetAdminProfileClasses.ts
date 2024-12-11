@@ -102,44 +102,4 @@ export class GetProfileClasses {
       UnKnownErrorSenderToClient({ req, res }, err);
     }
   }
-
-  static async getAllBlogsWithPagination(req: Request, res: Response) {
-    try {
-      const language = req.headers.language as T_ValidLanguages;
-
-      const { userEmail } = req;
-
-      const desiredUser = await AdminUserModel.findOne({
-        email: userEmail,
-      });
-
-      if (!desiredUser) {
-        notFoundCurrentUser({ req, res });
-        return;
-      }
-
-      const { page = 1, size = 5 } = req.query;
-      const pageInt = parseInt(page as string, 10);
-      const sizeInt = parseInt(size as string, 10);
-
-      const blogs = await BlogModel.find({ publisherEmail: userEmail })
-        .skip((pageInt - 1) * sizeInt)
-        .limit(sizeInt)
-        .exec();
-
-      const count = await BlogModel.countDocuments();
-
-      res.status(DoneStatusCode.done.standardStatusCode).json({
-        message: getWordBasedOnCurrLang(language, "successful"),
-        data: {
-          blogs,
-          count,
-          page,
-          size,
-        },
-      });
-    } catch (err) {
-      UnKnownErrorSenderToClient({ req, res }, err);
-    }
-  }
 }

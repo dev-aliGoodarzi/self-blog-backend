@@ -96,13 +96,13 @@ app.use((req, res, next) => {
  *
  *
  */
-// #region API DOCUMANTS
+// #region API DOCUMENTS
 app.use(
   "/swagger-static-files",
-  express.static(path.join(__dirname, "../Swagger/CSS"))
+  express.static(path.join(__dirname, "../Swagger/Admin/CSS"))
 );
 app.use(
-  "/documentation/swagger-ui",
+  "/documentation/admin/swagger-ui",
   (req: any, res: any, next: any) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
@@ -110,7 +110,7 @@ app.use(
     next();
   },
   swaggerUi.serve,
-  swaggerUi.setup(require("./../Swagger/SwaggerJson.json"), {
+  swaggerUi.setup(require("./../Swagger/Admin/AdminSwagger.json"), {
     explorer: true,
     customJs: "/swagger-static-files/custom-js.js",
   })

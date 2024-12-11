@@ -29,6 +29,7 @@ import { _auth_services } from "./_classes/_auth_services";
 
 // Middlewares
 import { authMiddlewareWithoutFullRegisterRequired } from "./Middlewares/authMiddlewareWithoutFullRegisterRequired";
+import { notFoundCurrentUser } from "./Middlewares/notFoundCurrentUser";
 // Middlewares
 
 export const AdminAuth = Router();
@@ -150,6 +151,11 @@ AdminAuth.post(
         email: req.userEmail,
       });
 
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
       if (desiredUser!.isRegisterCompleted) {
         ErrorSenderToClient(
           {
@@ -188,6 +194,43 @@ AdminAuth.post(
           );
         });
 
+        if (String(req.body.name).length < 3) {
+          ErrorSenderToClient(
+            {
+              data: {},
+              expectedType: "string",
+              errorData: {
+                errorKey: "LENGTH_IS_LESS_THAN_DESIRE",
+                errorMessage: getWordBasedOnCurrLang(
+                  language as T_ValidLanguages,
+                  "lengthIsLittleThanDesire"
+                ),
+              },
+            },
+            ErrorsStatusCode.notAcceptable.standardStatusCode,
+            res
+          );
+          return;
+        }
+        if (String(req.body.lastName).length < 3) {
+          ErrorSenderToClient(
+            {
+              data: {},
+              expectedType: "string",
+              errorData: {
+                errorKey: "LENGTH_IS_LESS_THAN_DESIRE",
+                errorMessage: getWordBasedOnCurrLang(
+                  language as T_ValidLanguages,
+                  "lengthIsLittleThanDesire"
+                ),
+              },
+            },
+            ErrorsStatusCode.notAcceptable.standardStatusCode,
+            res
+          );
+          return;
+        }
+
         if (Object.keys(errors).length > 0) {
           ErrorSenderToClient(
             {
@@ -204,11 +247,11 @@ AdminAuth.post(
           return;
         }
 
-        desiredUser!.name = body["name"];
-        desiredUser!.lastName = body["lastName"];
-        desiredUser!.isRegisterCompleted = true;
+        desiredUser.name = body["name"];
+        desiredUser.lastName = body["lastName"];
+        desiredUser.isRegisterCompleted = true;
 
-        await desiredUser!.save();
+        await desiredUser.save();
 
         res.status(DoneStatusCode.done.standardStatusCode).json({
           message: getWordBasedOnCurrLang(language, "userAuthCompleted"),

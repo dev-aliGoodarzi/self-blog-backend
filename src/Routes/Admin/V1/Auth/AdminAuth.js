@@ -34,6 +34,7 @@ const _auth_services_1 = require("./_classes/_auth_services");
 // Services
 // Middlewares
 const authMiddlewareWithoutFullRegisterRequired_1 = require("./Middlewares/authMiddlewareWithoutFullRegisterRequired");
+const notFoundCurrentUser_1 = require("./Middlewares/notFoundCurrentUser");
 // Middlewares
 exports.AdminAuth = (0, express_1.Router)();
 exports.AdminAuth.post("/auth/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -113,6 +114,10 @@ exports.AdminAuth.post("/auth/resubmit-user-auth", authMiddlewareWithoutFullRegi
         const desiredUser = yield UserModel_1.AdminUserModel.findOne({
             email: req.userEmail,
         });
+        if (!desiredUser) {
+            (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+            return;
+        }
         if (desiredUser.isRegisterCompleted) {
             (0, ErrorSenderToClient_1.ErrorSenderToClient)({
                 data: {},
@@ -136,6 +141,28 @@ exports.AdminAuth.post("/auth/resubmit-user-auth", authMiddlewareWithoutFullRegi
                     errors[errKey] = _errData;
                 });
             });
+            if (String(req.body.name).length < 3) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: {},
+                    expectedType: "string",
+                    errorData: {
+                        errorKey: "LENGTH_IS_LESS_THAN_DESIRE",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "lengthIsLittleThanDesire"),
+                    },
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
+            if (String(req.body.lastName).length < 3) {
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: {},
+                    expectedType: "string",
+                    errorData: {
+                        errorKey: "LENGTH_IS_LESS_THAN_DESIRE",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "lengthIsLittleThanDesire"),
+                    },
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                return;
+            }
             if (Object.keys(errors).length > 0) {
                 (0, ErrorSenderToClient_1.ErrorSenderToClient)({
                     data: errors,

@@ -163,11 +163,11 @@ class _auth_classes {
             const newAccessToken = (0, generateNewToken_1.generateNewToken)({
                 email: desiredUser.email,
                 id: desiredUser.userId,
-            }, "1h");
+            }, String(process.env.TOKEN_EXPIRE_TIME));
             const newRefreshToken = (0, generateNewToken_1.generateNewToken)({
                 email: desiredUser.email,
                 id: desiredUser.userId,
-            }, "2d");
+            }, String(process.env.REFRESH_TOKEN_EXPIRE_TIME));
             desiredUser.userToken = newAccessToken;
             desiredUser.refreshToken = newRefreshToken;
             yield desiredUser.save();

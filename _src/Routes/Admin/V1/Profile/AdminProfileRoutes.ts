@@ -63,8 +63,4 @@ AdminProfileRoutes.put(
   UpdateAdminProfileClasses.updateAdminUserProfileImage
 );
 
-AdminProfileRoutes.get(
-  "/profile/blogs",
-  authMiddleware,
-  GetProfileClasses.getAllBlogsWithPagination
-);
+

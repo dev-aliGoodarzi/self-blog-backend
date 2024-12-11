@@ -13,6 +13,11 @@ exports.BlogSchema = new mongoose_1.default.Schema({
     publisherEmail: String,
     blogId: String,
     tags: [String],
+    likes: [
+        {
+            userId: String,
+        },
+    ],
     comments: [
         {
             commentTitle: String,
