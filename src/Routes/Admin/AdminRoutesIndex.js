@@ -8,4 +8,6 @@ const express_1 = require("express");
 const AdminRoutesV1_1 = require("./V1/AdminRoutesV1");
 // Routes
 exports.AdminRoutes = (0, express_1.Router)();
+// V1
 exports.AdminRoutes.use("/v1", AdminRoutesV1_1.AdminRoutesV1);
+// V1

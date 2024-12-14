@@ -33,7 +33,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
 /*
  *
  *
@@ -59,6 +58,19 @@ app.use((bodyParser as any).urlencoded({ extended: true }));
  *
  *
  */
+// #region StaticServes
+app.use("/uploads/blog-images", express.static("uploads/blog-images"));
+/*
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
 // #region Language Middleware
 app.use((req, res, next) => {
   const language = req.headers.language;
@@ -72,13 +84,35 @@ app.use((req, res, next) => {
   }
   next();
 });
-
+/*
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+// #region BaseRoute
 app.get("/", (_, res) => {
   res.status(200).json({
     message: "Server Works Normally ",
   });
 });
-
+/*
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+// #region CacheReset
 app.use((req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Pragma", "no-cache");
@@ -101,6 +135,7 @@ app.use(
   "/swagger-static-files",
   express.static(path.join(__dirname, "../Swagger/Admin/CSS"))
 );
+//
 app.use(
   "/documentation/admin/swagger-ui",
   (req: any, res: any, next: any) => {
@@ -126,7 +161,7 @@ app.use(
  *
  *
  */
-// #region AdminRoutes V1
+// #region AdminRoutes
 app.use("/admin", AdminRoutes);
 /*
  *

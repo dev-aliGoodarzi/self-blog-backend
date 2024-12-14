@@ -72,7 +72,7 @@ export class GetProfileClasses {
 
       const filePath = path.resolve(
         __dirname,
-        `./../../../../../../uploads/${desiredUser.image}`
+        `./../../../../../../uploads/user-avatars/${desiredUser.image}`
       );
 
       fs.readFile(filePath, { encoding: "base64" }, (err, data) => {

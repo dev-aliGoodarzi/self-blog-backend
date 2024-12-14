@@ -80,7 +80,7 @@ class GetProfileClasses {
                     (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
                     return;
                 }
-                const filePath = path_1.default.resolve(__dirname, `./../../../../../../uploads/${desiredUser.image}`);
+                const filePath = path_1.default.resolve(__dirname, `./../../../../../../uploads/user-avatars/${desiredUser.image}`);
                 fs_1.default.readFile(filePath, { encoding: "base64" }, (err, data) => {
                     if (err) {
                         (0, ErrorSenderToClient_1.ErrorSenderToClient)({

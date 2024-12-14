@@ -25,4 +25,5 @@ export const en_lang: Record<T_LanguageKeys, string> = {
   lengthIsLittleThanDesire: "lengthIsLittleThanDesire",
   notAuthCompleted: "notAuthCompleted",
   notFoundDesiredBlog: "notFoundDesiredBlog",
+  bigRange : "bigRange"
 };

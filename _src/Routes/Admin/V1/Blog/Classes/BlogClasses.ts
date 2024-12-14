@@ -31,6 +31,11 @@ import { DataPickerInObjectBasedOnArgs } from "../../../../../Utils/Pickers/Data
 import { DataPickerBasedOnArgsForArray } from "../../../../../Utils/Pickers/DataPickerBasedOnArgsForArray";
 import { ReturnCurrentValueIfIncluded } from "../../../../../Utils/Returner/ReturnCurrentValueIfIncluded";
 import { ValidTypes } from "../../../../../Constants/ValidTypes/ValidTypes";
+import { checkIsValidByPattern } from "../../../../../Validators/checkIsValidByPattern";
+import { addDataToExistingObject } from "../../../../../Utils/DataAdder/addDataToExistingObject";
+import { GetTimeStampBasedOnReceivedDate } from "../../../../../Utils/Date/GetTimeStampBasedOnReceivedDate";
+import { IsBetween } from "../../../../../Utils/Math/IsBetween";
+import { CheckDifferenceBetweenTwoDate } from "../../../../../Utils/Date/CheckDiffranceBetweenTwoDate";
 // Middlewares
 
 export class BlogClasses {
@@ -103,6 +108,14 @@ export class BlogClasses {
         return;
       }
 
+      const date = new Date();
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+      const day = String(date.getDate()).padStart(2, "0");
+
+      const formattedDate = `${year}/${month}/${day}`;
+      const fullDate = Date.now();
       const blogTags: string[] = [];
       String(req?.body?.tags)
         .split(",")
@@ -115,6 +128,8 @@ export class BlogClasses {
         title: req.body.title,
         isPublished: false,
         publisherEmail: desiredUser.email,
+        createDate: formattedDate,
+        fullDate,
         tags: blogTags,
         blogId: `blg_${Date.now()}_${RandomCharGenByLength(32)}`,
         likes: [],
@@ -126,6 +141,7 @@ export class BlogClasses {
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        blogData: newBlogData.toJSON(),
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);
@@ -360,8 +376,6 @@ export class BlogClasses {
 
       const { userEmail } = req;
 
-      const tags = await TagModel.find({});
-
       const desiredUser = await AdminUserModel.findOne({
         email: userEmail,
       });
@@ -370,6 +384,8 @@ export class BlogClasses {
         notFoundCurrentUser({ req, res });
         return;
       }
+
+      const tags = await TagModel.find({});
 
       const { page = 1, size = 5 } = req.query;
       const pageInt = parseInt(page as string, 10) || 1;
@@ -457,6 +473,178 @@ export class BlogClasses {
           size: sizeInt,
           maxPages: Math.ceil(count / sizeInt),
         },
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
+
+  static async uploadBlogImageAndReturnImageUrl(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const currMode = process.env.MODE as "DEV" | "PROD";
+
+      if (req.file) {
+        const fileUrl = `${req.file.destination}${req.file.filename}`;
+        res.status(DoneStatusCode.done.standardStatusCode).json({
+          message: getWordBasedOnCurrLang(language, "operationSuccess"),
+          imageHref:
+            currMode === "DEV"
+              ? `http://localhost:${
+                  process.env.LISTEN_PORT as string
+                }/${fileUrl}`
+              : `https://api.self-blog.ir/${fileUrl}`,
+        });
+        return;
+      }
+
+      ErrorSenderToClient(
+        {
+          data: {},
+          errorData: {
+            errorKey: "THIS_API_ONLY_ACCEPT_IMAGE",
+            errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+          },
+          expectedType: "file",
+        },
+        ErrorsStatusCode.notAcceptable.standardStatusCode,
+        res
+      );
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
+
+  static async getBlogsWithDateRange(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const { userEmail } = req;
+
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
+
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      const errors: { [key: string]: T_ErrorData } = {};
+
+      checkIsValidByPattern(
+        req.query["start-date"] as string,
+        formats.date,
+        getWordBasedOnCurrLang(language, "wrongType"),
+        "start-date",
+        (errData, errorMessage, errorKey) => {
+          errors[errorKey] = addDataToExistingObject(errors[errorKey], {
+            errorMessage,
+          });
+        }
+      );
+
+      checkIsValidByPattern(
+        req.query["end-date"] as string,
+        formats.date,
+        getWordBasedOnCurrLang(language, "wrongType"),
+        "end-date",
+        (errData, errorMessage, errorKey) => {
+          errors[errorKey] = addDataToExistingObject(errors[errorKey], {
+            errorMessage,
+          });
+        }
+      );
+
+      if (Object.keys(errors).length > 0) {
+        ErrorSenderToClient(
+          {
+            data: errors,
+            errorData: {
+              errorKey: "",
+              errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+
+        console.log(errors);
+
+        return;
+      }
+
+      const startDateTimeStamp = GetTimeStampBasedOnReceivedDate(
+        req.query["start-date"] as string
+      );
+
+      const endDateTimeStamp = GetTimeStampBasedOnReceivedDate(
+        req.query["end-date"] as string
+      );
+
+      if (
+        CheckDifferenceBetweenTwoDate(startDateTimeStamp, endDateTimeStamp, 3)
+      ) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "TWO_MANY_DAYS_IS_DIFFERENCE",
+              errorMessage: getWordBasedOnCurrLang(language, "bigRange"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+
+        return;
+      }
+      const allBlogsCount = await BlogModel.countDocuments();
+
+      const tags = await TagModel.find({});
+
+      const { page = 1, size = 1 } = req.query;
+      const pageInt = parseInt(page as string, 10) || 1;
+      const sizeInt =
+        size === "all" ? allBlogsCount : parseInt(size as string, 10) || 1;
+
+      const allUserBlogs = await BlogModel.find({
+        publisherEmail: desiredUser.email,
+      })
+        .skip((pageInt - 1) * sizeInt)
+        .limit(sizeInt)
+        .exec();
+
+      const _desiredBlogs = allUserBlogs
+        .map((i) => i.toJSON())
+        .filter((item) => {
+          const blogTimeStamp = GetTimeStampBasedOnReceivedDate(
+            item.createDate
+          );
+          if (IsBetween(blogTimeStamp, startDateTimeStamp, endDateTimeStamp))
+            return true;
+          return false;
+        });
+
+      const desiredBlogs = _desiredBlogs.map((item) => ({
+        ...item,
+        likes: item.likes.length,
+        rating: calculateAverage(item.rating),
+        tags: DataPickerBasedOnArgsForArray(
+          DataPickerBasedOnArgs(item.tags, tags),
+          ["title", "value"]
+        ),
+      }));
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        blogs: desiredBlogs,
+        page: pageInt,
+        size: sizeInt,
+        allCount: allBlogsCount,
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);

@@ -28,4 +28,5 @@ export const fa_lang: Record<T_LanguageKeys, string> = {
   notAuthCompleted:
     "احراز هویت کامل نشده ، لطفا ابتدا احراز هویت کنید تا به تمامی قسمت ها دسترسی داشته باشید .",
   notFoundDesiredBlog: "آیدی بلاگ ارسالی معتبر نمیباشد یا قبلا حذف شده است .",
+  bigRange: "محدوده ی کوئری بسیار بزرگ میباشد و قابل انجام نیست .",
 };

@@ -22,7 +22,7 @@ const authMiddlewareWithoutFullRegisterRequired_1 = require("../Auth/Middlewares
 // Multer
 exports.AdminProfileRoutes = (0, express_1.Router)();
 const upload = (0, multer_1.default)({
-    dest: "uploads/",
+    dest: "uploads/user-avatars/",
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith("image/")) {
             cb(null, true);

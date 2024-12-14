@@ -647,7 +647,7 @@
                 },
                 "tags": {
                   "type": "array",
-                  "example": "[]"
+                  "example": "[{title : string , value : string}]"
                 }
               }
             }

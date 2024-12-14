@@ -22,7 +22,7 @@ import { authMiddlewareWithoutFullRegisterRequired } from "../Auth/Middlewares/a
 export const AdminProfileRoutes = Router();
 
 const upload = multer({
-  dest: "uploads/",
+  dest: "uploads/user-avatars/",
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
       cb(null, true);

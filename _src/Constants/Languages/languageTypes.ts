@@ -27,4 +27,5 @@ export type T_LanguageKeys =
   | "resetPasswordEmailSend"
   | "lengthIsLittleThanDesire"
   | "notAuthCompleted"
-  | "notFoundDesiredBlog";
+  | "notFoundDesiredBlog"
+  | "bigRange";

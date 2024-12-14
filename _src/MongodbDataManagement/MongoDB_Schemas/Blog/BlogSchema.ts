@@ -18,6 +18,8 @@ export type T_BlogSchema = {
   isPublished: boolean;
   publisherEmail: string;
   blogId: string;
+  createDate: string;
+  fullDate: string;
   tags: string[];
   comments: T_BlogComments[];
   likes: T_BlogLikes[];
@@ -31,6 +33,8 @@ export const BlogSchema = new mongoose.Schema<T_BlogSchema>({
   publisherEmail: String,
   blogId: String,
   tags: [String],
+  createDate: String,
+  fullDate: String,
   likes: [
     {
       userId: String,

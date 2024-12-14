@@ -5,3 +5,9 @@ node_modules
 ./uploads
 /uploads
 uploads
+
+
+
+./blog-images
+/blog-images
+blog-images

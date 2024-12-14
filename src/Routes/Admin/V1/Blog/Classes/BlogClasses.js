@@ -42,6 +42,11 @@ const DataPickerBasedOnArgs_1 = require("../../../../../Utils/Pickers/DataPicker
 const DataPickerBasedOnArgsForArray_1 = require("../../../../../Utils/Pickers/DataPickerBasedOnArgsForArray");
 const ReturnCurrentValueIfIncluded_1 = require("../../../../../Utils/Returner/ReturnCurrentValueIfIncluded");
 const ValidTypes_1 = require("../../../../../Constants/ValidTypes/ValidTypes");
+const checkIsValidByPattern_1 = require("../../../../../Validators/checkIsValidByPattern");
+const addDataToExistingObject_1 = require("../../../../../Utils/DataAdder/addDataToExistingObject");
+const GetTimeStampBasedOnReceivedDate_1 = require("../../../../../Utils/Date/GetTimeStampBasedOnReceivedDate");
+const IsBetween_1 = require("../../../../../Utils/Math/IsBetween");
+const CheckDiffranceBetweenTwoDate_1 = require("../../../../../Utils/Date/CheckDiffranceBetweenTwoDate");
 // Middlewares
 class BlogClasses {
     static addNewBlog(req, res) {
@@ -90,6 +95,12 @@ class BlogClasses {
                     console.log(errors);
                     return;
                 }
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+                const day = String(date.getDate()).padStart(2, "0");
+                const formattedDate = `${year}/${month}/${day}`;
+                const fullDate = Date.now();
                 const blogTags = [];
                 String((_b = req === null || req === void 0 ? void 0 : req.body) === null || _b === void 0 ? void 0 : _b.tags)
                     .split(",")
@@ -101,6 +112,8 @@ class BlogClasses {
                     title: req.body.title,
                     isPublished: false,
                     publisherEmail: desiredUser.email,
+                    createDate: formattedDate,
+                    fullDate,
                     tags: blogTags,
                     blogId: `blg_${Date.now()}_${(0, RandomCharGenByLength_1.RandomCharGenByLength)(32)}`,
                     likes: [],
@@ -109,6 +122,7 @@ class BlogClasses {
                 yield newBlogData.save();
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    blogData: newBlogData.toJSON(),
                 });
             }
             catch (err) {
@@ -287,7 +301,6 @@ class BlogClasses {
             try {
                 const language = req.headers.language;
                 const { userEmail } = req;
-                const tags = yield TagModel_1.TagModel.find({});
                 const desiredUser = yield UserModel_1.AdminUserModel.findOne({
                     email: userEmail,
                 });
@@ -295,6 +308,7 @@ class BlogClasses {
                     (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
                     return;
                 }
+                const tags = yield TagModel_1.TagModel.find({});
                 const { page = 1, size = 5 } = req.query;
                 const pageInt = parseInt(page, 10) || 1;
                 const sizeInt = parseInt(size, 10) || 1;
@@ -354,6 +368,116 @@ class BlogClasses {
                         size: sizeInt,
                         maxPages: Math.ceil(count / sizeInt),
                     },
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
+    static uploadBlogImageAndReturnImageUrl(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const currMode = process.env.MODE;
+                if (req.file) {
+                    const fileUrl = `${req.file.destination}${req.file.filename}`;
+                    res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                        message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                        imageHref: currMode === "DEV"
+                            ? `http://localhost:${process.env.LISTEN_PORT}/${fileUrl}`
+                            : `https://api.self-blog.ir/${fileUrl}`,
+                    });
+                    return;
+                }
+                (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                    data: {},
+                    errorData: {
+                        errorKey: "THIS_API_ONLY_ACCEPT_IMAGE",
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                    },
+                    expectedType: "file",
+                }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
+    static getBlogsWithDateRange(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const { userEmail } = req;
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
+                const errors = {};
+                (0, checkIsValidByPattern_1.checkIsValidByPattern)(req.query["start-date"], formats_1.formats.date, (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"), "start-date", (errData, errorMessage, errorKey) => {
+                    errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
+                        errorMessage,
+                    });
+                });
+                (0, checkIsValidByPattern_1.checkIsValidByPattern)(req.query["end-date"], formats_1.formats.date, (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"), "end-date", (errData, errorMessage, errorKey) => {
+                    errors[errorKey] = (0, addDataToExistingObject_1.addDataToExistingObject)(errors[errorKey], {
+                        errorMessage,
+                    });
+                });
+                if (Object.keys(errors).length > 0) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: errors,
+                        errorData: {
+                            errorKey: "",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                    console.log(errors);
+                    return;
+                }
+                const startDateTimeStamp = (0, GetTimeStampBasedOnReceivedDate_1.GetTimeStampBasedOnReceivedDate)(req.query["start-date"]);
+                const endDateTimeStamp = (0, GetTimeStampBasedOnReceivedDate_1.GetTimeStampBasedOnReceivedDate)(req.query["end-date"]);
+                if ((0, CheckDiffranceBetweenTwoDate_1.CheckDifferenceBetweenTwoDate)(startDateTimeStamp, endDateTimeStamp, 3)) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "TWO_MANY_DAYS_IS_DIFFERENCE",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "bigRange"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                    return;
+                }
+                const allBlogsCount = yield BlogModel_1.BlogModel.countDocuments();
+                const tags = yield TagModel_1.TagModel.find({});
+                const { page = 1, size = 1 } = req.query;
+                const pageInt = parseInt(page, 10) || 1;
+                const sizeInt = size === "all" ? allBlogsCount : parseInt(size, 10) || 1;
+                const allUserBlogs = yield BlogModel_1.BlogModel.find({
+                    publisherEmail: desiredUser.email,
+                })
+                    .skip((pageInt - 1) * sizeInt)
+                    .limit(sizeInt)
+                    .exec();
+                const _desiredBlogs = allUserBlogs
+                    .map((i) => i.toJSON())
+                    .filter((item) => {
+                    const blogTimeStamp = (0, GetTimeStampBasedOnReceivedDate_1.GetTimeStampBasedOnReceivedDate)(item.createDate);
+                    if ((0, IsBetween_1.IsBetween)(blogTimeStamp, startDateTimeStamp, endDateTimeStamp))
+                        return true;
+                    return false;
+                });
+                const desiredBlogs = _desiredBlogs.map((item) => (Object.assign(Object.assign({}, item), { likes: item.likes.length, rating: (0, CalculateAvg_1.calculateAverage)(item.rating), tags: (0, DataPickerBasedOnArgsForArray_1.DataPickerBasedOnArgsForArray)((0, DataPickerBasedOnArgs_1.DataPickerBasedOnArgs)(item.tags, tags), ["title", "value"]) })));
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    blogs: desiredBlogs,
+                    page: pageInt,
+                    size: sizeInt,
+                    allCount: allBlogsCount,
                 });
             }
             catch (err) {

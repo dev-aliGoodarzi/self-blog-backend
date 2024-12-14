@@ -8,4 +8,6 @@ import { AdminRoutesV1 } from "./V1/AdminRoutesV1";
 
 export const AdminRoutes = Router();
 
+// V1
 AdminRoutes.use("/v1", AdminRoutesV1);
+// V1

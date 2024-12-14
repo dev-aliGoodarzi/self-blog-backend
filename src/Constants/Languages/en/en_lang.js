@@ -25,4 +25,5 @@ exports.en_lang = {
     lengthIsLittleThanDesire: "lengthIsLittleThanDesire",
     notAuthCompleted: "notAuthCompleted",
     notFoundDesiredBlog: "notFoundDesiredBlog",
+    bigRange: "bigRange"
 };
