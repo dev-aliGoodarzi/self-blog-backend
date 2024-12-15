@@ -10,11 +10,14 @@ exports.BlogSchema = new mongoose_1.default.Schema({
     innerHTML: String,
     rating: [Number],
     isPublished: Boolean,
+    isRejected: Boolean,
     publisherEmail: String,
     blogId: String,
     tags: [String],
     createDate: String,
     fullDate: String,
+    views: Number,
+    editTimes: Number,
     likes: [
         {
             userId: String,

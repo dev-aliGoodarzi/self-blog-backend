@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.currMode = void 0;
 // Express
 const express_1 = __importDefault(require("express"));
 // Express
@@ -55,6 +56,7 @@ app.use(body_parser_1.default.urlencoded({ extended: true }));
  */
 // #region StaticServes
 app.use("/uploads/blog-images", express_1.default.static("uploads/blog-images"));
+app.use("/uploads/user-avatars", express_1.default.static("uploads/user-avatars"));
 /*
  *
  *
@@ -162,13 +164,13 @@ app.use("/admin", AdminRoutesIndex_1.AdminRoutes);
  *
  */
 // #region Mongoose
-const currMode = process.env.NODE_ENV === "production" ? "prod" : "dev";
-const mongodbURI = currMode === "dev"
+exports.currMode = process.env.NODE_ENV === "production" ? "prod" : "dev";
+const mongodbURI = exports.currMode === "dev"
     ? process.env.MONGODB_CONNECTION_STRING_LOCAL
     : process.env.MONGODB_CONNECTION_STRING_PROD;
 let dbStatus = {
     isConnected: false,
-    url: currMode === "prod"
+    url: exports.currMode === "prod"
         ? mongodbURI.split("").splice(0, 10).join("")
         : mongodbURI,
     mongoError: "",

@@ -117,6 +117,9 @@ class BlogClasses {
                     tags: blogTags,
                     blogId: `blg_${Date.now()}_${(0, RandomCharGenByLength_1.RandomCharGenByLength)(32)}`,
                     likes: [],
+                    views: 0,
+                    isRejected: false,
+                    editTimes: 0,
                 });
                 yield newBlogData.validate();
                 yield newBlogData.save();
@@ -160,12 +163,21 @@ class BlogClasses {
     }
     static editSingleBlog(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
+            var _a, _b;
             try {
                 const language = req.headers.language;
                 const { blogId } = req.params;
+                const { userEmail } = req;
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
                 const desiredBlog = yield BlogModel_1.BlogModel.findOne({
                     blogId,
+                    publisherEmail: desiredUser.email,
                 });
                 if (!desiredBlog) {
                     (0, ErrorSenderToClient_1.ErrorSenderToClient)({
@@ -176,14 +188,6 @@ class BlogClasses {
                         },
                         expectedType: "string",
                     }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
-                    return;
-                }
-                const { userEmail } = req;
-                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
-                    email: userEmail,
-                });
-                if (!desiredUser) {
-                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
                     return;
                 }
                 const errors = {};
@@ -197,18 +201,6 @@ class BlogClasses {
                         errors[errKey] = _errData;
                     });
                 });
-                const allTags = yield TagModel_1.TagModel.find({});
-                const isTagsValid = String((_a = req === null || req === void 0 ? void 0 : req.body) === null || _a === void 0 ? void 0 : _a.tags).length === 0
-                    ? true
-                    : String((_b = req === null || req === void 0 ? void 0 : req.body) === null || _b === void 0 ? void 0 : _b.tags)
-                        .split(",")
-                        .every((tag) => allTags.map((_item) => _item === null || _item === void 0 ? void 0 : _item.value).includes(tag));
-                if (!isTagsValid) {
-                    errors["tags"] = {
-                        errorKey: "tags",
-                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "tagsMissMatch"),
-                    };
-                }
                 if (Object.keys(errors).length > 0) {
                     (0, ErrorSenderToClient_1.ErrorSenderToClient)({
                         data: errors,
@@ -222,17 +214,20 @@ class BlogClasses {
                     return;
                 }
                 const blogTags = [];
-                String((_c = req === null || req === void 0 ? void 0 : req.body) === null || _c === void 0 ? void 0 : _c.tags)
+                String((_a = req === null || req === void 0 ? void 0 : req.body) === null || _a === void 0 ? void 0 : _a.tags)
                     .split(",")
                     .forEach((item) => blogTags.push(item));
                 desiredBlog.title = req.body.title;
                 desiredBlog.innerHTML = req.body.innerHTML;
-                if (String((_d = req === null || req === void 0 ? void 0 : req.body) === null || _d === void 0 ? void 0 : _d.tags).length !== 0) {
+                if (String((_b = req === null || req === void 0 ? void 0 : req.body) === null || _b === void 0 ? void 0 : _b.tags).length !== 0) {
                     desiredBlog.tags = blogTags;
                 }
+                desiredBlog.editTimes += 1;
                 yield desiredBlog.save();
+                const allTags = yield TagModel_1.TagModel.find({});
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    blog: Object.assign(Object.assign({}, desiredBlog.toJSON()), { likes: desiredBlog.likes.length, rating: (0, CalculateAvg_1.calculateAverage)(desiredBlog.rating), tags: (0, DataPickerBasedOnArgsForArray_1.DataPickerBasedOnArgsForArray)((0, DataPickerBasedOnArgs_1.DataPickerBasedOnArgs)(desiredBlog.tags, allTags), ["title", "value"]) }),
                 });
             }
             catch (err) {
@@ -260,13 +255,10 @@ class BlogClasses {
                     }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
                     return;
                 }
+                const tags = yield TagModel_1.TagModel.find({});
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
-                    data: {
-                        title: desiredBlog.title,
-                        tags: desiredBlog.tags,
-                        innerHTML: desiredBlog.innerHTML,
-                    },
+                    data: Object.assign(Object.assign({}, desiredBlog.toJSON()), { rating: (0, CalculateAvg_1.calculateAverage)(desiredBlog.rating), likes: desiredBlog.likes.length, tags: (0, DataPickerBasedOnArgsForArray_1.DataPickerBasedOnArgsForArray)((0, DataPickerBasedOnArgs_1.DataPickerBasedOnArgs)(desiredBlog.tags, tags), ["title", "value"]) }),
                 });
             }
             catch (err) {
@@ -478,6 +470,176 @@ class BlogClasses {
                     page: pageInt,
                     size: sizeInt,
                     allCount: allBlogsCount,
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
+    static removeSingleTagInSingleBlog(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const { blogId, tagValue } = req.params;
+                const { userEmail } = req;
+                const desiredBlog = yield BlogModel_1.BlogModel.findOne({
+                    blogId,
+                    publisherEmail: userEmail,
+                });
+                const allTags = yield TagModel_1.TagModel.find({});
+                if (!desiredBlog) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "NOT_FOUND_BLOG || REMOVED_EARLIER",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "notFoundDesiredBlog"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notExist.standardStatusCode, res);
+                    return;
+                }
+                if (allTags.findIndex((i) => i.value === tagValue) === -1) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "NOT_FOUND_TAG || REMOVED_EARLIER",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "tagsMissMatch"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                    return;
+                }
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
+                if (desiredBlog.tags.findIndex((i) => i === tagValue) === -1) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "NOT_FOUND_TAG_IN_DESIRED_BLOG",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "tagsMissMatch"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notExist.standardStatusCode, res);
+                    return;
+                }
+                desiredBlog.tags = desiredBlog.tags.filter((i) => i !== tagValue);
+                desiredBlog.editTimes += 1;
+                yield desiredBlog.save();
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    blog: Object.assign(Object.assign({}, desiredBlog.toJSON()), { likes: desiredBlog.likes.length, rating: (0, CalculateAvg_1.calculateAverage)(desiredBlog.rating), tags: (0, DataPickerBasedOnArgsForArray_1.DataPickerBasedOnArgsForArray)((0, DataPickerBasedOnArgs_1.DataPickerBasedOnArgs)(desiredBlog.tags, allTags), ["title", "value"]) }),
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
+    static addSingleTagInSingleBlog(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const { userEmail } = req;
+                const { blogId, tagValue } = req.params;
+                const desiredBlog = yield BlogModel_1.BlogModel.findOne({
+                    blogId,
+                    publisherEmail: userEmail,
+                });
+                const allTags = yield TagModel_1.TagModel.find({});
+                if (!desiredBlog) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "NOT_FOUND_BLOG || REMOVED_EARLIER",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "notFoundDesiredBlog"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notExist.standardStatusCode, res);
+                    return;
+                }
+                if (allTags.findIndex((i) => i.value === tagValue) === -1) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "NOT_FOUND_TAG || REMOVED_EARLIER",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "tagsMissMatch"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                    return;
+                }
+                const desiredUser = yield UserModel_1.AdminUserModel.findOne({
+                    email: userEmail,
+                });
+                if (!desiredUser) {
+                    (0, notFoundCurrentUser_1.notFoundCurrentUser)({ req, res });
+                    return;
+                }
+                if (desiredBlog.tags.findIndex((i) => i === tagValue) > -1) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "TAG_IS_ALREADY_EXISTS_IN_DESIRED_BLOG",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "tagsMissMatch"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notAcceptable.standardStatusCode, res);
+                    return;
+                }
+                desiredBlog.tags.push(tagValue);
+                desiredBlog.editTimes += 1;
+                yield desiredBlog.save();
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    blog: Object.assign(Object.assign({}, desiredBlog.toJSON()), { likes: desiredBlog.likes.length, rating: (0, CalculateAvg_1.calculateAverage)(desiredBlog.rating), tags: (0, DataPickerBasedOnArgsForArray_1.DataPickerBasedOnArgsForArray)((0, DataPickerBasedOnArgs_1.DataPickerBasedOnArgs)(desiredBlog.tags, allTags), ["title", "value"]) }),
+                });
+            }
+            catch (err) {
+                (0, UnKnownErrorSenderToClient_1.UnKnownErrorSenderToClient)({ req, res }, err);
+            }
+        });
+    }
+    static getSingleBlogTags(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const language = req.headers.language;
+                const { userEmail } = req;
+                const { blogId } = req.params;
+                const errors = {};
+                const desiredKeys = ["blogId"];
+                desiredKeys.forEach((item) => {
+                    (0, checkIsNull_1.checkIsNull)(req.params, "string", {
+                        errorKey: item,
+                        errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "wrongType"),
+                    }, (_errData, errKey) => {
+                        errors[errKey] = _errData;
+                    });
+                });
+                const desiredBlog = yield BlogModel_1.BlogModel.findOne({
+                    blogId,
+                    publisherEmail: userEmail,
+                });
+                if (!desiredBlog) {
+                    (0, ErrorSenderToClient_1.ErrorSenderToClient)({
+                        data: {},
+                        errorData: {
+                            errorKey: "NOT_FOUND_BLOG || REMOVED_EARLIER",
+                            errorMessage: (0, Languages_1.getWordBasedOnCurrLang)(language, "notFoundDesiredBlog"),
+                        },
+                        expectedType: "string",
+                    }, ErrorsStatusCode_1.ErrorsStatusCode.notExist.standardStatusCode, res);
+                    return;
+                }
+                const allTags = yield TagModel_1.TagModel.find({});
+                res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
+                    message: (0, Languages_1.getWordBasedOnCurrLang)(language, "operationSuccess"),
+                    tags: (0, DataPickerBasedOnArgsForArray_1.DataPickerBasedOnArgsForArray)((0, DataPickerBasedOnArgs_1.DataPickerBasedOnArgs)(desiredBlog.tags, allTags), ["title", "value"]),
                 });
             }
             catch (err) {

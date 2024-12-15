@@ -36,3 +36,6 @@ exports.BlogRoutes.get("/blog/tags", authMiddleware_1.authMiddleware, BlogClasse
 exports.BlogRoutes.get("/blog/blogs", authMiddleware_1.authMiddleware, BlogClasses_1.BlogClasses.getAllBlogsWithPagination);
 exports.BlogRoutes.post("/blog/upload-blog-image", authMiddleware_1.authMiddleware, upload.single("image"), BlogClasses_1.BlogClasses.uploadBlogImageAndReturnImageUrl);
 exports.BlogRoutes.get("/blog/range-blog", authMiddleware_1.authMiddleware, BlogClasses_1.BlogClasses.getBlogsWithDateRange);
+exports.BlogRoutes.delete("/blog/edit-blog/remove-tag/:blogId/:tagValue", authMiddleware_1.authMiddleware, BlogClasses_1.BlogClasses.removeSingleTagInSingleBlog);
+exports.BlogRoutes.patch("/blog/edit-blog/add-tag/:blogId/:tagValue", authMiddleware_1.authMiddleware, BlogClasses_1.BlogClasses.addSingleTagInSingleBlog);
+exports.BlogRoutes.get("/blog/tags/:blogId", authMiddleware_1.authMiddleware, BlogClasses_1.BlogClasses.getSingleBlogTags);

@@ -42,6 +42,7 @@ const ErrorsStatusCode_1 = require("../../../../../Constants/Errors/ErrorsStatus
 // Modules
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const app_1 = require("../../../../../app");
 // Modules
 class GetProfileClasses {
     static getCurrentAdminProfile(req, res) {
@@ -57,10 +58,12 @@ class GetProfileClasses {
                     return;
                 }
                 const blogs = yield BlogModel_1.BlogModel.find({ publisherEmail: userEmail });
-                const _a = desiredUser.toJSON(), { password, userToken, refreshToken, _id } = _a, others = __rest(_a, ["password", "userToken", "refreshToken", "_id"]);
+                const _a = desiredUser.toJSON(), { password, userToken, refreshToken, _id, image } = _a, others = __rest(_a, ["password", "userToken", "refreshToken", "_id", "image"]);
                 res.status(DoneStatusCode_1.DoneStatusCode.done.standardStatusCode).json({
                     message: (0, Languages_1.getWordBasedOnCurrLang)(language, "successful"),
-                    data: Object.assign(Object.assign({}, others), { blogs: blogs.map((item) => item.blogId) }),
+                    data: Object.assign(Object.assign({}, others), { image: `${app_1.currMode === "dev"
+                            ? `http://localhost:8000`
+                            : `https://api.self-blog.ir`}/uploads/user-avatars/${image}`, blogs: blogs.map((item) => item.blogId) }),
                 });
             }
             catch (err) {

@@ -60,6 +60,7 @@ app.use((bodyParser as any).urlencoded({ extended: true }));
  */
 // #region StaticServes
 app.use("/uploads/blog-images", express.static("uploads/blog-images"));
+app.use("/uploads/user-avatars", express.static("uploads/user-avatars"));
 /*
  *
  *
@@ -175,7 +176,8 @@ app.use("/admin", AdminRoutes);
  *
  */
 // #region Mongoose
-const currMode = process.env.NODE_ENV === "production" ? "prod" : "dev";
+export const currMode: "prod" | "dev" =
+  process.env.NODE_ENV === "production" ? "prod" : "dev";
 const mongodbURI =
   currMode === "dev"
     ? process.env.MONGODB_CONNECTION_STRING_LOCAL!

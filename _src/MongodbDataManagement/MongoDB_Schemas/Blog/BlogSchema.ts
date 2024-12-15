@@ -16,6 +16,7 @@ export type T_BlogSchema = {
   innerHTML: string;
   rating: number[]; // 1 - 5
   isPublished: boolean;
+  isRejected: boolean;
   publisherEmail: string;
   blogId: string;
   createDate: string;
@@ -23,6 +24,8 @@ export type T_BlogSchema = {
   tags: string[];
   comments: T_BlogComments[];
   likes: T_BlogLikes[];
+  views: number;
+  editTimes: number;
 };
 
 export const BlogSchema = new mongoose.Schema<T_BlogSchema>({
@@ -30,11 +33,14 @@ export const BlogSchema = new mongoose.Schema<T_BlogSchema>({
   innerHTML: String,
   rating: [Number],
   isPublished: Boolean,
+  isRejected: Boolean,
   publisherEmail: String,
   blogId: String,
   tags: [String],
   createDate: String,
   fullDate: String,
+  views: Number,
+  editTimes: Number,
   likes: [
     {
       userId: String,

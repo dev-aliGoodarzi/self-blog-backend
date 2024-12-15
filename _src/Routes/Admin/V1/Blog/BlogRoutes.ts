@@ -67,3 +67,21 @@ BlogRoutes.get(
   authMiddleware,
   BlogClasses.getBlogsWithDateRange
 );
+
+BlogRoutes.delete(
+  "/blog/edit-blog/remove-tag/:blogId/:tagValue",
+  authMiddleware,
+  BlogClasses.removeSingleTagInSingleBlog
+);
+
+BlogRoutes.patch(
+  "/blog/edit-blog/add-tag/:blogId/:tagValue",
+  authMiddleware,
+  BlogClasses.addSingleTagInSingleBlog
+);
+
+BlogRoutes.get(
+  "/blog/tags/:blogId",
+  authMiddleware,
+  BlogClasses.getSingleBlogTags
+);

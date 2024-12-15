@@ -23,6 +23,7 @@ import { ErrorsStatusCode } from "../../../../../Constants/Errors/ErrorsStatusCo
 // Modules
 import path from "path";
 import fs from "fs";
+import { currMode } from "../../../../../app";
 // Modules
 
 export class GetProfileClasses {
@@ -43,12 +44,20 @@ export class GetProfileClasses {
 
       const blogs = await BlogModel.find({ publisherEmail: userEmail });
 
-      const { password, userToken, refreshToken, _id, ...others } =
+      const { password, userToken, refreshToken, _id, image, ...others } =
         desiredUser.toJSON();
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "successful"),
-        data: { ...others, blogs: blogs.map((item) => item.blogId) },
+        data: {
+          ...others,
+          image: `${
+            currMode === "dev"
+              ? `http://localhost:8000`
+              : `https://api.self-blog.ir`
+          }/uploads/user-avatars/${image}`,
+          blogs: blogs.map((item) => item.blogId),
+        },
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);

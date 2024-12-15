@@ -133,6 +133,9 @@ export class BlogClasses {
         tags: blogTags,
         blogId: `blg_${Date.now()}_${RandomCharGenByLength(32)}`,
         likes: [],
+        views: 0,
+        isRejected: false,
+        editTimes: 0,
       });
 
       await newBlogData.validate();
@@ -191,8 +194,20 @@ export class BlogClasses {
 
       const { blogId } = req.params;
 
+      const { userEmail } = req;
+
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
+
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
       const desiredBlog = await BlogModel.findOne({
         blogId,
+        publisherEmail: desiredUser.email,
       });
 
       if (!desiredBlog) {
@@ -211,17 +226,6 @@ export class BlogClasses {
           ErrorsStatusCode.notAcceptable.standardStatusCode,
           res
         );
-        return;
-      }
-
-      const { userEmail } = req;
-
-      const desiredUser = await AdminUserModel.findOne({
-        email: userEmail,
-      });
-
-      if (!desiredUser) {
-        notFoundCurrentUser({ req, res });
         return;
       }
 
@@ -244,24 +248,6 @@ export class BlogClasses {
           }
         );
       });
-
-      const allTags = await TagModel.find({});
-
-      const isTagsValid: boolean =
-        String(req?.body?.tags).length === 0
-          ? true
-          : String(req?.body?.tags)
-              .split(",")
-              .every((tag: string) =>
-                allTags.map((_item) => _item?.value).includes(tag)
-              );
-
-      if (!isTagsValid) {
-        errors["tags"] = {
-          errorKey: "tags",
-          errorMessage: getWordBasedOnCurrLang(language, "tagsMissMatch"),
-        };
-      }
 
       if (Object.keys(errors).length > 0) {
         ErrorSenderToClient(
@@ -293,10 +279,22 @@ export class BlogClasses {
         desiredBlog.tags = blogTags;
       }
 
+      desiredBlog.editTimes += 1;
       await desiredBlog.save();
+
+      const allTags = await TagModel.find({});
 
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        blog: {
+          ...desiredBlog.toJSON(),
+          likes: desiredBlog.likes.length,
+          rating: calculateAverage(desiredBlog.rating),
+          tags: DataPickerBasedOnArgsForArray(
+            DataPickerBasedOnArgs(desiredBlog.tags, allTags),
+            ["title", "value"]
+          ),
+        },
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);
@@ -333,12 +331,18 @@ export class BlogClasses {
         return;
       }
 
+      const tags = await TagModel.find({});
+
       res.status(DoneStatusCode.done.standardStatusCode).json({
         message: getWordBasedOnCurrLang(language, "operationSuccess"),
         data: {
-          title: desiredBlog.title,
-          tags: desiredBlog.tags,
-          innerHTML: desiredBlog.innerHTML,
+          ...desiredBlog.toJSON(),
+          rating: calculateAverage(desiredBlog.rating),
+          likes: desiredBlog.likes.length,
+          tags: DataPickerBasedOnArgsForArray(
+            DataPickerBasedOnArgs(desiredBlog.tags, tags),
+            ["title", "value"]
+          ),
         },
       });
     } catch (err) {
@@ -645,6 +649,262 @@ export class BlogClasses {
         page: pageInt,
         size: sizeInt,
         allCount: allBlogsCount,
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
+
+  static async removeSingleTagInSingleBlog(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const { blogId, tagValue } = req.params;
+
+      const { userEmail } = req;
+
+      const desiredBlog = await BlogModel.findOne({
+        blogId,
+        publisherEmail: userEmail,
+      });
+
+      const allTags = await TagModel.find({});
+
+      if (!desiredBlog) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_FOUND_BLOG || REMOVED_EARLIER",
+              errorMessage: getWordBasedOnCurrLang(
+                language,
+                "notFoundDesiredBlog"
+              ),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notExist.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      if (allTags.findIndex((i) => i.value === tagValue) === -1) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_FOUND_TAG || REMOVED_EARLIER",
+              errorMessage: getWordBasedOnCurrLang(language, "tagsMissMatch"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
+
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      if (desiredBlog.tags.findIndex((i) => i === tagValue) === -1) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_FOUND_TAG_IN_DESIRED_BLOG",
+              errorMessage: getWordBasedOnCurrLang(language, "tagsMissMatch"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notExist.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      desiredBlog.tags = desiredBlog.tags.filter((i) => i !== tagValue);
+      desiredBlog.editTimes += 1;
+      await desiredBlog.save();
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        blog: {
+          ...desiredBlog.toJSON(),
+          likes: desiredBlog.likes.length,
+          rating: calculateAverage(desiredBlog.rating),
+          tags: DataPickerBasedOnArgsForArray(
+            DataPickerBasedOnArgs(desiredBlog.tags, allTags),
+            ["title", "value"]
+          ),
+        },
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
+
+  static async addSingleTagInSingleBlog(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const { userEmail } = req;
+
+      const { blogId, tagValue } = req.params;
+
+      const desiredBlog = await BlogModel.findOne({
+        blogId,
+        publisherEmail: userEmail,
+      });
+
+      const allTags = await TagModel.find({});
+
+      if (!desiredBlog) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_FOUND_BLOG || REMOVED_EARLIER",
+              errorMessage: getWordBasedOnCurrLang(
+                language,
+                "notFoundDesiredBlog"
+              ),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notExist.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      if (allTags.findIndex((i) => i.value === tagValue) === -1) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_FOUND_TAG || REMOVED_EARLIER",
+              errorMessage: getWordBasedOnCurrLang(language, "tagsMissMatch"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      const desiredUser = await AdminUserModel.findOne({
+        email: userEmail,
+      });
+
+      if (!desiredUser) {
+        notFoundCurrentUser({ req, res });
+        return;
+      }
+
+      if (desiredBlog.tags.findIndex((i) => i === tagValue) > -1) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "TAG_IS_ALREADY_EXISTS_IN_DESIRED_BLOG",
+              errorMessage: getWordBasedOnCurrLang(language, "tagsMissMatch"),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notAcceptable.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      desiredBlog.tags.push(tagValue);
+      desiredBlog.editTimes += 1;
+      await desiredBlog.save();
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        blog: {
+          ...desiredBlog.toJSON(),
+          likes: desiredBlog.likes.length,
+          rating: calculateAverage(desiredBlog.rating),
+          tags: DataPickerBasedOnArgsForArray(
+            DataPickerBasedOnArgs(desiredBlog.tags, allTags),
+            ["title", "value"]
+          ),
+        },
+      });
+    } catch (err) {
+      UnKnownErrorSenderToClient({ req, res }, err);
+    }
+  }
+
+  static async getSingleBlogTags(req: Request, res: Response) {
+    try {
+      const language = req.headers.language as T_ValidLanguages;
+
+      const { userEmail } = req;
+
+      const { blogId } = req.params;
+
+      const errors: { [key: string]: T_ErrorData } = {};
+
+      const desiredKeys = ["blogId"];
+
+      desiredKeys.forEach((item) => {
+        checkIsNull(
+          req.params,
+          "string",
+          {
+            errorKey: item,
+            errorMessage: getWordBasedOnCurrLang(language, "wrongType"),
+          },
+          (_errData, errKey) => {
+            (errors as any)[errKey] = _errData;
+          }
+        );
+      });
+
+      const desiredBlog = await BlogModel.findOne({
+        blogId,
+        publisherEmail: userEmail,
+      });
+
+      if (!desiredBlog) {
+        ErrorSenderToClient(
+          {
+            data: {},
+            errorData: {
+              errorKey: "NOT_FOUND_BLOG || REMOVED_EARLIER",
+              errorMessage: getWordBasedOnCurrLang(
+                language,
+                "notFoundDesiredBlog"
+              ),
+            },
+            expectedType: "string",
+          },
+          ErrorsStatusCode.notExist.standardStatusCode,
+          res
+        );
+        return;
+      }
+
+      const allTags = await TagModel.find({});
+
+      res.status(DoneStatusCode.done.standardStatusCode).json({
+        message: getWordBasedOnCurrLang(language, "operationSuccess"),
+        tags: DataPickerBasedOnArgsForArray(
+          DataPickerBasedOnArgs(desiredBlog.tags, allTags),
+          ["title", "value"]
+        ),
       });
     } catch (err) {
       UnKnownErrorSenderToClient({ req, res }, err);
